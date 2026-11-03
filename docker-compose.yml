@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  padel-app:
+    # Bygger fra den inkluderte Dockerfilen
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: padel-league-pwa
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/padel.db
+      - USER_PASSWORD=padel123
+      - ADMIN_PASSWORD=ditt_hemmelige_admin_passord
+      - PORT=3000
+      - NEXT_PUBLIC_PWA_URL=https://padel.ev1.me
+    volumes:
+      # Persistent volum for SQLite-databasen
+      - ./padel-data:/app/data
+    ports:
+      - "3000:3000"
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.padelapp.rule=Host(`padel.ev1.me`)"
+      - "traefik.http.routers.padelapp.entrypoints=websecure"
+      - "traefik.http.routers.padelapp.tls=true"
+      - "traefik.http.services.padelapp.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+    external: true # Antar at du har Traefik kjørende på et eksternt nettverk i din Homelab

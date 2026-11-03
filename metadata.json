@@ -1,0 +1,6 @@
+{
+  "name": "PadelFlex",
+  "description": "Mobile-first PWA for managing Padel tournaments, leagues, and Americano/Mexicano matches.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
