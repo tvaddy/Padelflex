@@ -1,6 +1,12 @@
 # PadelFlex 🎾
 
-A modern, mobile-first Progressive Web App (PWA) built with **Next.js 15 App Router**, **React 19**, **TypeScript**, **Tailwind CSS v4**, and **Prisma with SQLite** for complete management of padel tournaments, leagues, Americano/Mexicano formats, and career statistics.
+A self-hosted modern, mobile-first Progressive Web App (PWA) for complete management of padel tournaments, leagues, Americano/Mexicano formats, and career statistics.
+
+PadelFlex was engineered specifically for padel clubs, friend groups, and corporate leagues. It eliminates manual paper notes and rigid spreadsheets, handling rotations, multi-court queues, and 2v2 Elo ratings in real time.
+
+The main goal of the project was to easily allow for an uneven amount of players (e.g. 5-7), for players to join or leave mid-tournament, and then fairly match playtime for players dynamically.
+
+Disclaimer: This app was developed in its entirety by Google AI Studio. It was developed as a personal hobby project, and is provided here as a proof-of-concept.
 
 ---
 
@@ -30,6 +36,8 @@ A modern, mobile-first Progressive Web App (PWA) built with **Next.js 15 App Rou
 ## 1. Overview & Tech Stack
 
 PadelFlex was engineered specifically for padel clubs, friend groups, and corporate leagues. It eliminates manual paper notes and rigid spreadsheets, handling rotations, multi-court queues, and 2v2 Elo ratings in real time.
+
+The main goal of the project was to easily allow for an uneven amount of players (e.g. 5-7), for players to join or leave mid-tournament, and then fairly match playtime for players dynamically.
 
 - **Framework**: Next.js 15.5+ (App Router, Server Actions, Route Handlers)
 - **Frontend**: React 19, TypeScript, Tailwind CSS v4, Motion (fluid animations), Lucide React icons
