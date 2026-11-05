@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toPng, toBlob } from 'html-to-image';
 import PadelLogo from './PadelLogo';
+import { useTranslation } from '@/lib/i18n';
 
 type ResultCardModalProps = {
   type: 'match' | 'tournament' | 'league';
@@ -33,6 +34,7 @@ function getResultCardFileName(type: 'match' | 'tournament' | 'league'): string 
 }
 
 export default function ResultCardModal({ type, data, onClose }: ResultCardModalProps) {
+  const { t, isEnglish } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [copiedType, setCopiedType] = useState<'image' | 'text' | null>(null);
@@ -146,32 +148,42 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
 
   // Build clean text summary for WhatsApp / SMS / Messenger sharing
   const textSummary = useMemo(() => {
-    const today = new Date().toLocaleDateString('no-NB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const today = new Date().toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', { day: '2-digit', month: 'short', year: 'numeric' });
     if (type === 'match') {
       if (isStandaloneSetMatch) {
         const setsText = parsedSets.map((s: any) => `${s.teamA}-${s.teamB}`).join(', ');
         const winner = teamAWonStandalone ? `${teamAPlayer1Name} & ${teamAPlayer2Name}` : `${teamBPlayer1Name} & ${teamBPlayer2Name}`;
-        return `🎾 PADEL RESULTAT (${today}) 🎾\n\n${teamAPlayer1Name} & ${teamAPlayer2Name} vs ${teamBPlayer1Name} & ${teamBPlayer2Name}\nSett: ${setsText || 'Fullført'}\nVinner: 🏆 ${winner}\n\nSpilt via PadelFlex`;
+        return isEnglish
+          ? `🎾 PADEL RESULT (${today}) 🎾\n\n${teamAPlayer1Name} & ${teamAPlayer2Name} vs ${teamBPlayer1Name} & ${teamBPlayer2Name}\nSets: ${setsText || 'Completed'}\nWinner: 🏆 ${winner}\n\nPlayed via PadelFlex`
+          : `🎾 PADEL RESULTAT (${today}) 🎾\n\n${teamAPlayer1Name} & ${teamAPlayer2Name} vs ${teamBPlayer1Name} & ${teamBPlayer2Name}\nSett: ${setsText || 'Fullført'}\nVinner: 🏆 ${winner}\n\nSpilt via PadelFlex`;
       } else {
         const sA = data?.teamAScore ?? 0;
         const sB = data?.teamBScore ?? 0;
-        const winner = sA > sB ? `${teamAPlayer1Name} & ${teamAPlayer2Name}` : sB > sA ? `${teamBPlayer1Name} & ${teamBPlayer2Name}` : 'Uavgjort';
-        return `🎾 PADEL RESULTAT (${today}) 🎾\n\nLag A (${sA}p): ${teamAPlayer1Name} & ${teamAPlayer2Name}\nLag B (${sB}p): ${teamBPlayer1Name} & ${teamBPlayer2Name}\nVinner: 🏆 ${winner}\n\nSpilt via PadelFlex`;
+        const winner = sA > sB ? `${teamAPlayer1Name} & ${teamAPlayer2Name}` : sB > sA ? `${teamBPlayer1Name} & ${teamBPlayer2Name}` : (isEnglish ? 'Draw' : 'Uavgjort');
+        return isEnglish
+          ? `🎾 PADEL RESULT (${today}) 🎾\n\nTeam A (${sA}pts): ${teamAPlayer1Name} & ${teamAPlayer2Name}\nTeam B (${sB}pts): ${teamBPlayer1Name} & ${teamBPlayer2Name}\nWinner: 🏆 ${winner}\n\nPlayed via PadelFlex`
+          : `🎾 PADEL RESULTAT (${today}) 🎾\n\nLag A (${sA}p): ${teamAPlayer1Name} & ${teamAPlayer2Name}\nLag B (${sB}p): ${teamBPlayer1Name} & ${teamBPlayer2Name}\nVinner: 🏆 ${winner}\n\nSpilt via PadelFlex`;
       }
     } else if (isLeagueCard) {
       const topList = (data?.participants || []).slice(0, 5).map((p: any, i: number) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-        return `${medal} ${p.user?.name || 'Spiller'} - Rating: ${Math.round(p.eloRating || 1500)}`;
+        return `${medal} ${p.user?.name || (isEnglish ? 'Player' : 'Spiller')} - Rating: ${Math.round(p.eloRating || 1500)}`;
       }).join('\n');
-      return `🏅 LIGATABELL: ${data?.name || 'Liga'} (${today}) 🏅\n\n${topList}\n\nSe full oversikt på PadelFlex`;
+      return isEnglish
+        ? `🏅 LEAGUE STANDINGS: ${data?.name || 'League'} (${today}) 🏅\n\n${topList}\n\nSee full standings on PadelFlex`
+        : `🏅 LIGATABELL: ${data?.name || 'Liga'} (${today}) 🏅\n\n${topList}\n\nSe full oversikt på PadelFlex`;
     } else {
       const topList = sortedTournamentParticipants.slice(0, 5).map((p: any, i: number) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-        return `${medal} ${p.user?.name || 'Spiller'}: ${p.totalPoints || 0} poeng (${p.matchesWon || 0}V-${p.matchesDrawn || 0}U-${p.matchesLost || 0}T)`;
+        return isEnglish
+          ? `${medal} ${p.user?.name || 'Player'}: ${p.totalPoints || 0} pts (${p.matchesWon || 0}W-${p.matchesDrawn || 0}D-${p.matchesLost || 0}L)`
+          : `${medal} ${p.user?.name || 'Spiller'}: ${p.totalPoints || 0} poeng (${p.matchesWon || 0}V-${p.matchesDrawn || 0}U-${p.matchesLost || 0}T)`;
       }).join('\n');
-      return `🏆 TURNERINGSRESULTAT: ${data?.name || 'Turnering'} (${today}) 🏆\n\n${topList}\n\nSpilt via PadelFlex`;
+      return isEnglish
+        ? `🏆 TOURNAMENT RESULTS: ${data?.name || 'Tournament'} (${today}) 🏆\n\n${topList}\n\nPlayed via PadelFlex`
+        : `🏆 TURNERINGSRESULTAT: ${data?.name || 'Turnering'} (${today}) 🏆\n\n${topList}\n\nSpilt via PadelFlex`;
     }
-  }, [type, isLeagueCard, isStandaloneSetMatch, data, parsedSets, teamAWonStandalone, teamAPlayer1Name, teamAPlayer2Name, teamBPlayer1Name, teamBPlayer2Name, sortedTournamentParticipants]);
+  }, [type, isEnglish, isLeagueCard, isStandaloneSetMatch, data, parsedSets, teamAWonStandalone, teamAPlayer1Name, teamAPlayer2Name, teamBPlayer1Name, teamBPlayer2Name, sortedTournamentParticipants]);
 
   // Direct 2D Canvas Fallback Renderer in case DOM-to-image library hits an edge case
   const renderCanvasFallback = useCallback(async (): Promise<Blob | null> => {
@@ -220,15 +232,15 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
     ctx.fillStyle = '#BFFF00';
     ctx.font = 'bold 24px sans-serif';
     const cardTitle = type === 'match' 
-      ? 'KAMP廝ESULTAT' 
+      ? (isEnglish ? 'MATCH RESULT' : 'KAMPRESULTAT') 
       : isLeagueCard 
-      ? 'LIGARATING & TABELL' 
-      : 'TURNERINGSRESULTAT';
+      ? (isEnglish ? 'LEAGUE RATING & STANDINGS' : 'LIGARATING & TABELL') 
+      : (isEnglish ? 'TOURNAMENT RESULTS' : 'TURNERINGSRESULTAT');
     ctx.fillText(cardTitle, 50, 160);
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 32px sans-serif';
-    const subTitle = data?.name || (type === 'match' ? 'Padelkamp' : 'Turnering');
+    const subTitle = data?.name || (type === 'match' ? (isEnglish ? 'Padel Match' : 'Padelkamp') : (isEnglish ? 'Tournament' : 'Turnering'));
     ctx.fillText(subTitle.length > 32 ? subTitle.substring(0, 30) + '...' : subTitle, 50, 205);
 
     if (type === 'match') {
@@ -236,7 +248,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
       const sA = data?.teamAScore ?? 0;
       const sB = data?.teamBScore ?? 0;
       
-      // Lag A Box
+      // Team A Box
       ctx.fillStyle = '#182012';
       ctx.fillRect(50, 250, 700, 180);
       ctx.strokeStyle = sA >= sB ? '#BFFF00' : '#333333';
@@ -244,7 +256,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
 
       ctx.fillStyle = '#BFFF00';
       ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('LAG A' + (sA > sB ? ' (Vinner 🏆)' : ''), 75, 290);
+      ctx.fillText((isEnglish ? 'TEAM A' : 'LAG A') + (sA > sB ? (isEnglish ? ' (Winner 🏆)' : ' (Vinner 🏆)') : ''), 75, 290);
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText(`${teamAPlayer1Name} & ${teamAPlayer2Name}`, 75, 340);
@@ -254,7 +266,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
       ctx.fillText(`${sA}p`, 720, 360);
       ctx.textAlign = 'left';
 
-      // Lag B Box
+      // Team B Box
       ctx.fillStyle = '#101c22';
       ctx.fillRect(50, 460, 700, 180);
       ctx.strokeStyle = sB >= sA ? '#22d3ee' : '#333333';
@@ -262,7 +274,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
 
       ctx.fillStyle = '#22d3ee';
       ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('LAG B' + (sB > sA ? ' (Vinner 🏆)' : ''), 75, 500);
+      ctx.fillText((isEnglish ? 'TEAM B' : 'LAG B') + (sB > sA ? (isEnglish ? ' (Winner 🏆)' : ' (Vinner 🏆)') : ''), 75, 500);
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText(`${teamBPlayer1Name} & ${teamBPlayer2Name}`, 75, 550);
@@ -295,7 +307,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
         // Player Name
         ctx.fillStyle = '#FFFFFF';
         ctx.font = isWinner ? 'bold 22px sans-serif' : '20px sans-serif';
-        const pName = p.user?.name || 'Spiller';
+        const pName = p.user?.name || (isEnglish ? 'Player' : 'Spiller');
         ctx.fillText(pName.length > 22 ? pName.substring(0, 20) + '...' : pName, 120, y + 40);
 
         // Stats / Points
@@ -308,7 +320,10 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
         } else {
           ctx.fillStyle = '#888888';
           ctx.font = '16px monospace';
-          ctx.fillText(`${p.matchesWon || 0}V-${p.matchesDrawn || 0}U-${p.matchesLost || 0}T`, 600, y + 40);
+          const recordStr = isEnglish
+            ? `${p.matchesWon || 0}W-${p.matchesDrawn || 0}D-${p.matchesLost || 0}L`
+            : `${p.matchesWon || 0}V-${p.matchesDrawn || 0}U-${p.matchesLost || 0}T`;
+          ctx.fillText(recordStr, 600, y + 40);
           ctx.fillStyle = '#BFFF00';
           ctx.font = 'bold 26px monospace';
           ctx.fillText(`${p.totalPoints || 0}p`, 720, y + 42);
@@ -331,7 +346,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/png');
     });
-  }, [type, isLeagueCard, data, teamAPlayer1Name, teamAPlayer2Name, teamBPlayer1Name, teamBPlayer2Name, sortedTournamentParticipants]);
+  }, [type, isEnglish, isLeagueCard, data, teamAPlayer1Name, teamAPlayer2Name, teamBPlayer1Name, teamBPlayer2Name, sortedTournamentParticipants]);
 
   // Robust PNG Generator with fallback chain
   const generatePngBlob = useCallback(async (): Promise<Blob | null> => {
@@ -560,13 +575,18 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
           <div className="flex items-center gap-2 text-white">
             <Sparkles className="w-5 h-5 text-[#BFFF00]" />
             <h3 className="font-extrabold text-base sm:text-lg">
-              {type === 'match' ? 'Resultatbilde for kamp' : isLeagueCard ? 'Ligatabell bilde' : 'Turneringsresultat'}
+              {type === 'match' 
+                ? (isEnglish ? 'Match Result Card' : 'Resultatbilde for kamp') 
+                : isLeagueCard 
+                ? (isEnglish ? 'League Standings Card' : 'Ligatabell bilde') 
+                : (isEnglish ? 'Tournament Result Card' : 'Turneringsresultat')}
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition"
+            className="p-1.5 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition cursor-pointer"
+            aria-label={t.common.close}
           >
             <X className="w-5 h-5" />
           </button>
@@ -609,7 +629,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                     {data?.format === 'BEST_OF_3' ? 'Best av 3 sett' : data?.format === 'BEST_OF_3_SUPER_TB' ? 'Super-Tiebreak' : 'Ordinær Kamp'}
                   </span>
                   <h4 className="text-sm font-extrabold text-white truncate mt-1">
-                    {data.name || 'Padelkamp'}
+                    {data.name || (isEnglish ? 'Padel Match' : 'Padelkamp')}
                   </h4>
                 </div>
 
@@ -624,11 +644,11 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[9px] font-black uppercase text-[#BFFF00] px-1 py-0.2 bg-[#BFFF00]/10 rounded">
-                          Lag A
+                          {isEnglish ? 'Team A' : 'Lag A'}
                         </span>
                         {teamAWonStandalone && (
                           <span className="text-[9px] font-extrabold bg-[#BFFF00] text-black px-1.5 py-0.2 rounded uppercase">
-                            Vinner 🏆
+                            {isEnglish ? 'Winner 🏆' : 'Vinner 🏆'}
                           </span>
                         )}
                       </div>
@@ -662,11 +682,11 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[9px] font-black uppercase text-cyan-400 px-1 py-0.2 bg-cyan-500/10 rounded">
-                          Lag B
+                          {isEnglish ? 'Team B' : 'Lag B'}
                         </span>
                         {teamBWonStandalone && (
                           <span className="text-[9px] font-extrabold bg-cyan-400 text-black px-1.5 py-0.2 rounded uppercase">
-                            Vinner 🏆
+                            {isEnglish ? 'Winner 🏆' : 'Vinner 🏆'}
                           </span>
                         )}
                       </div>
@@ -699,7 +719,9 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
               <div className="space-y-4">
                 <div className="text-center space-y-1">
                   <span className="px-2.5 py-0.5 bg-gray-900 border border-gray-800 text-gray-300 font-mono text-[10px] font-bold rounded-full uppercase tracking-wider">
-                    {data?.courtNumber ? `Bane ${data.courtNumber} • Kampfullført` : 'Kampresultat'}
+                    {data?.courtNumber 
+                      ? (isEnglish ? `Court ${data.courtNumber} • Match completed` : `Bane ${data.courtNumber} • Kampfullført`) 
+                      : (isEnglish ? 'Match Result' : 'Kampresultat')}
                   </span>
                   {data?.tournament?.name && (
                     <h4 className="text-xs font-bold text-gray-400 truncate mt-1">
@@ -718,11 +740,11 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                   }`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#BFFF00]">
-                        Lag A
+                        {isEnglish ? 'Team A' : 'Lag A'}
                       </span>
                       {data?.teamAScore > data?.teamBScore && (
                         <span className="px-1.5 py-0.2 bg-[#BFFF00] text-black text-[9px] font-extrabold rounded uppercase">
-                          Vinner
+                          {isEnglish ? 'Winner' : 'Vinner'}
                         </span>
                       )}
                     </div>
@@ -759,11 +781,11 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                   }`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
-                        Lag B
+                        {isEnglish ? 'Team B' : 'Lag B'}
                       </span>
                       {data?.teamBScore > data?.teamAScore && (
                         <span className="px-1.5 py-0.2 bg-cyan-400 text-black text-[9px] font-extrabold rounded uppercase">
-                          Vinner
+                          {isEnglish ? 'Winner' : 'Vinner'}
                         </span>
                       )}
                     </div>
@@ -964,7 +986,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
             className="py-3 bg-[#BFFF00] hover:bg-[#b0eb00] text-black rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-[0_0_20px_rgba(191,255,0,0.3)] disabled:opacity-50 cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
-            <span>{isExporting ? 'Genererer...' : 'Del bilde'}</span>
+            <span>{isExporting ? (isEnglish ? 'Generating...' : 'Genererer...') : (isEnglish ? 'Share Image' : 'Del bilde')}</span>
           </button>
 
           <button
@@ -974,7 +996,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
             className="py-3 bg-gray-800 hover:bg-gray-750 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>Last ned</span>
+            <span>{isEnglish ? 'Download' : 'Last ned'}</span>
           </button>
 
           <button
@@ -986,17 +1008,17 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
             {copiedType === 'image' ? (
               <>
                 <Check className="w-4 h-4 text-green-400" />
-                <span className="text-green-400">Bilde kopiert!</span>
+                <span className="text-green-400">{isEnglish ? 'Image copied!' : 'Bilde kopiert!'}</span>
               </>
             ) : copiedType === 'text' ? (
               <>
                 <FileText className="w-4 h-4 text-green-400" />
-                <span className="text-green-400">Tekst kopiert!</span>
+                <span className="text-green-400">{isEnglish ? 'Text copied!' : 'Tekst kopiert!'}</span>
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4" />
-                <span>Kopier</span>
+                <span>{isEnglish ? 'Copy' : 'Kopier'}</span>
               </>
             )}
           </button>
@@ -1008,16 +1030,16 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
-              className="text-[11px] text-gray-400 hover:text-[#BFFF00] font-mono inline-flex items-center gap-1 transition"
+              className="text-[11px] text-gray-400 hover:text-[#BFFF00] font-mono inline-flex items-center gap-1 transition cursor-pointer"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>{showPreview ? 'Skjul forhåndsvisning' : 'Tips: Vis bilde for å lagre direkte på mobil'}</span>
+              <span>{showPreview ? (isEnglish ? 'Hide preview' : 'Skjul forhåndsvisning') : (isEnglish ? 'Tip: Show image to save on mobile' : 'Tips: Vis bilde for å lagre direkte på mobil')}</span>
             </button>
 
             {showPreview && (
               <div className="mt-3 p-3 bg-black/80 rounded-2xl border border-gray-800 text-center space-y-2">
                 <p className="text-[11px] text-gray-300">
-                  📱 <strong>Tips for iPhone/Android:</strong> Hold fingeren inne på bildet under for å velge <em>«Lagre bilde»</em> eller <em>«Kopier»</em> direkte til kamerarull!
+                  📱 <strong>{isEnglish ? 'Tip for iPhone/Android:' : 'Tips for iPhone/Android:'}</strong> {isEnglish ? 'Tap and hold the image below to choose "Save Image" or "Copy" directly to camera roll!' : 'Hold fingeren inne på bildet under for å velge «Lagre bilde» eller «Kopier» direkte til kamerarull!'}
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 

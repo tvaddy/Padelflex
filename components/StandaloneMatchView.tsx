@@ -32,6 +32,7 @@ import {
   addPlayer
 } from '@/app/actions';
 import { useAuth } from './AuthContext';
+import { useTranslation } from '@/lib/i18n';
 import { isMatchEditable } from '@/lib/match-utils';
 
 
@@ -121,6 +122,7 @@ function playBeep(type: 'point' | 'game' | 'set' | 'match') {
 
 export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewProps) {
   const { isAdmin } = useAuth();
+  const { t, isEnglish } = useTranslation();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeMatch, setActiveMatch] = useState<any | null>(null);
@@ -130,7 +132,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
   const [resultCardMatch, setResultCardMatch] = useState<any | null>(null);
 
   // Form State for creating a match
-  const [formMatchName, setFormMatchName] = useState<string>('Ordinær padelkamp');
+  const [formMatchName, setFormMatchName] = useState<string>(isEnglish ? 'Regular Padel Match' : 'Ordinær padelkamp');
   const [formTeamAPlayer1, setFormTeamAPlayer1] = useState<string>('');
   const [formTeamAPlayer2, setFormTeamAPlayer2] = useState<string>('');
   const [formTeamBPlayer1, setFormTeamBPlayer1] = useState<string>('');
@@ -246,7 +248,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
         setQuickPlayerName('');
         setIsAddingQuickPlayer(false);
       } catch (err: any) {
-        alert(err.message || 'Kunne ikke opprette spiller');
+        alert(err.message || (isEnglish ? 'Could not create player' : 'Kunne ikke opprette spiller'));
       }
     });
   };
@@ -476,7 +478,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
   const handleCreateMatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTeamAPlayer1.trim() || !formTeamAPlayer2.trim() || !formTeamBPlayer1.trim() || !formTeamBPlayer2.trim()) {
-      alert('Vennligst oppgi 2 spillere på Lag A og 2 spillere på Lag B.');
+      alert(isEnglish ? 'Please provide 2 players on Team A and 2 players on Team B.' : 'Vennligst oppgi 2 spillere på Lag A og 2 spillere på Lag B.');
       return;
     }
 
@@ -488,7 +490,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
       const p4 = allPlayers.find(p => p.name.toLowerCase() === formTeamBPlayer2.trim().toLowerCase());
 
       const match = await createStandaloneMatch({
-        name: formMatchName.trim() || 'Ordinær padelkamp',
+        name: formMatchName.trim() || (isEnglish ? 'Regular Padel Match' : 'Ordinær padelkamp'),
         teamAPlayer1: formTeamAPlayer1.trim(),
         teamAPlayer2: formTeamAPlayer2.trim(),
         teamBPlayer1: formTeamBPlayer1.trim(),
@@ -507,7 +509,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
       selectMatch(match);
     } catch (err: any) {
       console.error('Failed to create match:', err);
-      alert('Kunne ikke opprette kampen: ' + err.message);
+      alert((isEnglish ? 'Could not create match: ' : 'Kunne ikke opprette kampen: ') + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -516,10 +518,10 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
   const handleDeleteMatch = async (id: string, matchDate: any, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAdmin && !isMatchEditable(matchDate)) {
-      alert('Kamper kan kun slettes på samme kalenderdag som de ble spilt. Kontakt administrator for sletting av eldre kamper.');
+      alert(isEnglish ? 'Matches can only be deleted on the same calendar day they were played. Contact an administrator to delete older matches.' : 'Kamper kan kun slettes på samme kalenderdag som de ble spilt. Kontakt administrator for sletting av eldre kamper.');
       return;
     }
-    if (!confirm('Er du sikker på at du vil slette denne kampen?')) return;
+    if (!confirm(isEnglish ? 'Are you sure you want to delete this match?' : 'Er du sikker på at du vil slette denne kampen?')) return;
     try {
       await deleteStandaloneMatch(id);
       if (activeMatch?.id === id) {
@@ -527,7 +529,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
       }
       loadMatches();
     } catch (err: any) {
-      alert(err.message || 'Kunne ikke slette kampen');
+      alert(err.message || (isEnglish ? 'Could not delete match' : 'Kunne ikke slette kampen'));
     }
   };
 
@@ -570,19 +572,19 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               className="p-2 sm:px-3 sm:py-2 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 border border-gray-800"
             >
               <ArrowLeft className="w-4 h-4 text-[#BFFF00]" />
-              <span className="hidden sm:inline">Alle kamper</span>
+              <span className="hidden sm:inline">{isEnglish ? 'All matches' : 'Alle kamper'}</span>
             </button>
 
             <div>
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
-                  Ordinær Padelkamp
+                  {isEnglish ? 'Regular Padel Match' : 'Ordinær Padelkamp'}
                 </span>
                 <span className="px-2 py-0.5 bg-gray-900 border border-gray-800 text-gray-400 rounded-full text-[10px] font-mono">
-                  {activeMatch.format === 'BEST_OF_3' ? 'Best av 3 sett' : activeMatch.format === 'BEST_OF_3_SUPER_TB' ? 'Best av 3 (Super-TB)' : '1 Sett'}
+                  {activeMatch.format === 'BEST_OF_3' ? (isEnglish ? 'Best of 3 sets' : 'Best av 3 sett') : activeMatch.format === 'BEST_OF_3_SUPER_TB' ? (isEnglish ? 'Best of 3 (Super-TB)' : 'Best av 3 (Super-TB)') : (isEnglish ? '1 Set' : '1 Sett')}
                 </span>
                 <span className="px-2 py-0.5 bg-black border border-gray-800 text-amber-400 rounded-full text-[10px] font-bold">
-                  {effectiveDeuceRule === 'GOLDEN_POINT' ? 'Golden point' : 'Tradisjonell fordel'}
+                  {effectiveDeuceRule === 'GOLDEN_POINT' ? 'Golden point' : (isEnglish ? 'Traditional advantage' : 'Tradisjonell fordel')}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-white">{activeMatch.name}</h2>
@@ -598,7 +600,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   ? 'bg-gray-900 text-[#BFFF00] border-gray-800 hover:bg-gray-800' 
                   : 'bg-gray-900/50 text-gray-500 border-gray-800'
               }`}
-              title={soundEnabled ? 'Lyd er på' : 'Lyd er av'}
+              title={soundEnabled ? (isEnglish ? 'Sound is on' : 'Lyd er på') : (isEnglish ? 'Sound is off' : 'Lyd er av')}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
@@ -610,7 +612,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 className="px-3.5 py-2 bg-[#BFFF00] text-black font-extrabold text-xs rounded-xl sm:rounded-2xl flex items-center gap-1.5 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_15px_rgba(191,255,0,0.3)]"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>Del resultatbilde</span>
+                <span>{isEnglish ? 'Share result card' : 'Del resultatbilde'}</span>
               </button>
             )}
           </div>
@@ -623,10 +625,14 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               <Trophy className="w-6 h-6" />
             </div>
             <h3 className="text-xl sm:text-2xl font-black text-white">
-              Vinner: {winnerTeam === 'A' ? `${activeMatch.teamAPlayer1} & ${activeMatch.teamAPlayer2}` : `${activeMatch.teamBPlayer1} & ${activeMatch.teamBPlayer2}`}!
+              {isEnglish
+                ? `Winner: ${winnerTeam === 'A' ? `${activeMatch.teamAPlayer1} & ${activeMatch.teamAPlayer2}` : `${activeMatch.teamBPlayer1} & ${activeMatch.teamBPlayer2}`}!`
+                : `Vinner: ${winnerTeam === 'A' ? `${activeMatch.teamAPlayer1} & ${activeMatch.teamAPlayer2}` : `${activeMatch.teamBPlayer1} & ${activeMatch.teamBPlayer2}`}!`}
             </h3>
             <p className="text-xs text-gray-300 font-medium">
-              Gratulerer med seieren! Kampen er fullført og lagret i historikken.
+              {isEnglish
+                ? 'Congratulations on the victory! The match is completed and saved in history.'
+                : 'Gratulerer med seieren! Kampen er fullført og lagret i historikken.'}
             </p>
           </div>
         )}
@@ -636,7 +642,9 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
           <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center justify-between text-blue-300 text-xs">
             <span className="font-bold flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-blue-400" />
-              Oddetalls-game ({totalGamesInSet} games): Husk sidebytte etter dette gamet!
+              {isEnglish
+                ? `Odd-numbered game (${totalGamesInSet} games): Remember to switch sides after this game!`
+                : `Oddetalls-game (${totalGamesInSet} games): Husk sidebytte etter dette gamet!`}
             </span>
           </div>
         )}
@@ -646,7 +654,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
           <div className="p-3.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-yellow-500/60 rounded-2xl text-center animate-pulse flex items-center justify-center gap-2 text-yellow-300">
             <Flame className="w-5 h-5 text-amber-400 fill-current" />
             <span className="font-black text-sm uppercase tracking-wider">
-              ⭐ GOLDEN POINT (AVGJØRENDE BALL) ⭐
+              {isEnglish ? '⭐ GOLDEN POINT (DECIDING BALL) ⭐' : '⭐ GOLDEN POINT (AVGJØRENDE BALL) ⭐'}
             </span>
           </div>
         )}
@@ -658,7 +666,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
             <table className="w-full text-center border-collapse">
               <thead>
                 <tr className="border-b border-gray-800 text-[11px] uppercase tracking-wider text-gray-500 font-extrabold">
-                  <th className="text-left py-2 px-3">Lag / Spillere</th>
+                  <th className="text-left py-2 px-3">{isEnglish ? 'Team / Players' : 'Lag / Spillere'}</th>
                   <th className="w-12 py-2">S</th>
                   {scoreState.sets.map((_, idx) => (
                     <th 
@@ -669,10 +677,10 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                           : ''
                       }`}
                     >
-                      Sett {idx + 1}
+                      {isEnglish ? `Set ${idx + 1}` : `Sett ${idx + 1}`}
                     </th>
                   ))}
-                  <th className="w-20 py-2 text-[#BFFF00]">Ball</th>
+                  <th className="w-20 py-2 text-[#BFFF00]">{isEnglish ? 'Ball' : 'Ball'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/60 text-sm sm:text-base font-black font-mono">
@@ -681,13 +689,13 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   <td className="text-left py-3 px-3">
                     <div className="flex items-center gap-2">
                       {scoreState.servingTeam === 'A' && !isCompleted && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#BFFF00] animate-ping" title="Server nå" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#BFFF00] animate-ping" title={isEnglish ? 'Serving now' : 'Server nå'} />
                       )}
                       <div className="min-w-0">
                         <div className="text-white text-sm sm:text-base font-bold truncate">
                           {activeMatch.teamAPlayer1} & {activeMatch.teamAPlayer2}
                         </div>
-                        <div className="text-[10px] text-gray-500 font-sans font-normal">Lag A</div>
+                        <div className="text-[10px] text-gray-500 font-sans font-normal">{isEnglish ? 'Team A' : 'Lag A'}</div>
                       </div>
                     </div>
                   </td>
@@ -718,13 +726,13 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   <td className="text-left py-3 px-3">
                     <div className="flex items-center gap-2">
                       {scoreState.servingTeam === 'B' && !isCompleted && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" title="Server nå" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" title={isEnglish ? 'Serving now' : 'Server nå'} />
                       )}
                       <div className="min-w-0">
                         <div className="text-white text-sm sm:text-base font-bold truncate">
                           {activeMatch.teamBPlayer1} & {activeMatch.teamBPlayer2}
                         </div>
-                        <div className="text-[10px] text-gray-500 font-sans font-normal">Lag B</div>
+                        <div className="text-[10px] text-gray-500 font-sans font-normal">{isEnglish ? 'Team B' : 'Lag B'}</div>
                       </div>
                     </div>
                   </td>
@@ -765,9 +773,9 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-black uppercase tracking-wider text-[#BFFF00] bg-[#BFFF00]/10 px-2.5 py-1 rounded-full border border-[#BFFF00]/20">
-                      Poeng til Lag A
+                      {isEnglish ? 'Point to Team A' : 'Poeng til Lag A'}
                     </span>
-                    <span className="text-xs text-gray-500 font-mono">Trykk for å score</span>
+                    <span className="text-xs text-gray-500 font-mono">{isEnglish ? 'Tap to score' : 'Trykk for å score'}</span>
                   </div>
 
                   <div className="mt-4">
@@ -775,7 +783,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                       {activeMatch.teamAPlayer1} & {activeMatch.teamAPlayer2}
                     </h3>
                     <div className="text-xs text-gray-400 font-mono mt-1">
-                      Nåværende: <span className="text-[#BFFF00] font-bold text-sm">
+                      {isEnglish ? 'Current:' : 'Nåværende:'} <span className="text-[#BFFF00] font-bold text-sm">
                         {scoreState.isTiebreak ? `${scoreState.tiebreakScores.teamA} p` : scoreState.currentPoints.teamA}
                       </span>
                     </div>
@@ -790,9 +798,9 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-black uppercase tracking-wider text-cyan-400 bg-cyan-400/10 px-2.5 py-1 rounded-full border border-cyan-400/20">
-                      Poeng til Lag B
+                      {isEnglish ? 'Point to Team B' : 'Poeng til Lag B'}
                     </span>
-                    <span className="text-xs text-gray-500 font-mono">Trykk for å score</span>
+                    <span className="text-xs text-gray-500 font-mono">{isEnglish ? 'Tap to score' : 'Trykk for å score'}</span>
                   </div>
 
                   <div className="mt-4">
@@ -800,7 +808,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                       {activeMatch.teamBPlayer1} & {activeMatch.teamBPlayer2}
                     </h3>
                     <div className="text-xs text-gray-400 font-mono mt-1">
-                      Nåværende: <span className="text-cyan-400 font-bold text-sm">
+                      {isEnglish ? 'Current:' : 'Nåværende:'} <span className="text-cyan-400 font-bold text-sm">
                         {scoreState.isTiebreak ? `${scoreState.tiebreakScores.teamB} p` : scoreState.currentPoints.teamB}
                       </span>
                     </div>
@@ -817,7 +825,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-gray-900 text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-gray-800"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Angre siste poeng</span>
+                  <span>{isEnglish ? 'Undo last point' : 'Angre siste poeng'}</span>
                 </button>
 
                 <button
@@ -830,7 +838,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   }}
                   className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-gray-800"
                 >
-                  <span>Bytt serve ({scoreState.servingTeam === 'A' ? 'Lag A' : 'Lag B'})</span>
+                  <span>{isEnglish ? `Switch server (${scoreState.servingTeam === 'A' ? 'Team A' : 'Team B'})` : `Bytt serve (${scoreState.servingTeam === 'A' ? 'Lag A' : 'Lag B'})`}</span>
                 </button>
               </div>
             </div>
@@ -842,7 +850,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 className="px-6 py-3 bg-[#BFFF00] text-black font-black text-sm rounded-2xl shadow-[0_0_20px_rgba(191,255,0,0.3)] hover:bg-[#b0eb00] transition inline-flex items-center gap-2"
               >
                 <Share2 className="w-4 h-4" />
-                <span>Generer og del resultatbilde</span>
+                <span>{isEnglish ? 'Generate & share result card' : 'Generer og del resultatbilde'}</span>
               </button>
             </div>
           )}
@@ -859,15 +867,19 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#BFFF00]/15 border border-[#BFFF00]/30 text-[#BFFF00] rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-              Ordinær Kamp
+              {isEnglish ? 'Regular Match' : 'Ordinær Kamp'}
             </span>
             <span className="text-xs text-gray-400 font-mono">
-              {matches.length} {matches.length === 1 ? 'kamp' : 'kamper'}
+              {matches.length} {isEnglish ? (matches.length === 1 ? 'match' : 'matches') : (matches.length === 1 ? 'kamp' : 'kamper')}
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">Ordinære Padelkamper</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">
+            {isEnglish ? 'Regular Padel Matches' : 'Ordinære Padelkamper'}
+          </h2>
           <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
-            Spill tradisjonell padel med sett (best av 3, super-tiebreak eller 1 sett), games og Golden point eller fordel.
+            {isEnglish
+              ? 'Play traditional padel with sets (best of 3, super-tiebreak or 1 set), games, and Golden point or advantage.'
+              : 'Spill tradisjonell padel med sett (best av 3, super-tiebreak eller 1 sett), games og Golden point eller fordel.'}
           </p>
         </div>
 
@@ -880,7 +892,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
           className="px-5 py-3 bg-[#BFFF00] text-black font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_20px_rgba(191,255,0,0.3)] shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Start ny ordinær kamp</span>
+          <span>{isEnglish ? 'Start new regular match' : 'Start ny ordinær kamp'}</span>
         </button>
       </div>
 
@@ -889,7 +901,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
         {loading ? (
           <div className="p-12 text-center text-gray-400 space-y-2">
             <div className="w-8 h-8 border-2 border-[#BFFF00] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-mono">Henter kamper...</p>
+            <p className="text-xs font-mono">{isEnglish ? 'Fetching matches...' : 'Henter kamper...'}</p>
           </div>
         ) : matches.length === 0 ? (
           <div className="p-8 sm:p-12 bg-[#141414] rounded-3xl border border-gray-800 text-center space-y-4">
@@ -897,9 +909,13 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               <Swords className="w-7 h-7" />
             </div>
             <div>
-              <h4 className="text-base sm:text-lg font-black text-white">Ingen ordinære kamper registrert ennå</h4>
+              <h4 className="text-base sm:text-lg font-black text-white">
+                {isEnglish ? 'No regular matches registered yet' : 'Ingen ordinære kamper registrert ennå'}
+              </h4>
               <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                Trykk på &quot;Start ny ordinær kamp&quot; for å velge spillere fra spillerlisten og starte live poengtelling med sett og games.
+                {isEnglish
+                  ? 'Click "Start new regular match" to select players from the roster and start live scoring with sets and games.'
+                  : 'Trykk på "Start ny ordinær kamp" for å velge spillere fra spillerlisten og starte live poengtelling med sett og games.'}
               </p>
             </div>
             <button
@@ -911,7 +927,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               className="px-5 py-2.5 bg-[#BFFF00] text-black text-xs font-black rounded-xl hover:bg-[#b0eb00] transition shadow-md inline-flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Start kamp nå</span>
+              <span>{isEnglish ? 'Start match now' : 'Start kamp nå'}</span>
             </button>
           </div>
         ) : (
@@ -936,10 +952,10 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                             ? 'bg-green-500/15 text-green-400 border border-green-500/30' 
                             : 'bg-[#BFFF00]/15 text-[#BFFF00] border border-[#BFFF00]/30 animate-pulse'
                         }`}>
-                          {m.isCompleted ? 'Fullført' : 'Pågår'}
+                          {m.isCompleted ? (isEnglish ? 'Completed' : 'Fullført') : (isEnglish ? 'In progress' : 'Pågår')}
                         </span>
                         <span className="text-[10px] text-gray-500 font-mono">
-                          {new Date(m.startedAt || m.createdAt).toLocaleDateString('no-NO')}
+                          {new Date(m.startedAt || m.createdAt).toLocaleDateString(isEnglish ? 'en-US' : 'no-NO')}
                         </span>
                       </div>
                       <h4 className="text-base font-black text-white mt-1 group-hover:text-[#BFFF00] transition break-words">
@@ -956,7 +972,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                             setResultCardMatch(m);
                           }}
                           className="p-1.5 text-gray-400 hover:text-[#BFFF00] hover:bg-[#BFFF00]/10 rounded-xl transition"
-                          title="Del resultatbilde"
+                          title={isEnglish ? 'Share result card' : 'Del resultatbilde'}
                         >
                           <Share2 className="w-4 h-4" />
                         </button>
@@ -967,14 +983,14 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                           type="button"
                           onClick={(e) => handleDeleteMatch(m.id, m.completedAt || m.startedAt || m.createdAt, e)}
                           className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition"
-                          title="Slett kamp"
+                          title={isEnglish ? 'Delete match' : 'Slett kamp'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       ) : (
                         <span 
                           className="p-1.5 text-gray-700 cursor-not-allowed" 
-                          title="Kamper kan kun slettes samme dag som de ble spilt"
+                          title={isEnglish ? 'Matches can only be deleted on the same day they were played' : 'Kamper kan kun slettes samme dag som de ble spilt'}
                         >
                           <Trash2 className="w-4 h-4 opacity-30" />
                         </span>
@@ -1010,9 +1026,9 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1">
-                    <span>Format: {m.format === 'BEST_OF_3' ? 'Best av 3 sett' : m.format === 'BEST_OF_3_SUPER_TB' ? 'Super-TB' : '1 Sett'}</span>
+                    <span>Format: {m.format === 'BEST_OF_3' ? (isEnglish ? 'Best of 3 sets' : 'Best av 3 sett') : m.format === 'BEST_OF_3_SUPER_TB' ? 'Super-TB' : (isEnglish ? '1 Set' : '1 Sett')}</span>
                     <span className="text-[#BFFF00] font-bold flex items-center gap-1 group-hover:translate-x-1 transition">
-                      Åpne scoreboard <ChevronRight className="w-3.5 h-3.5" />
+                      {isEnglish ? 'Open scoreboard' : 'Åpne scoreboard'} <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </div>
@@ -1033,8 +1049,8 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   <Swords className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white">Ny Ordinær Kamp</h3>
-                  <p className="text-xs text-gray-400">Velg spillere fra samme liste som turnering</p>
+                  <h3 className="text-xl font-black text-white">{isEnglish ? 'New Regular Match' : 'Ny Ordinær Kamp'}</h3>
+                  <p className="text-xs text-gray-400">{isEnglish ? 'Select players from the tournament roster' : 'Velg spillere fra samme liste som turnering'}</p>
                 </div>
               </div>
               <button
@@ -1050,13 +1066,13 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
             <form onSubmit={handleCreateMatch} className="space-y-4 overflow-y-auto pr-1">
               <div>
                 <label className="text-xs font-extrabold text-gray-300 block mb-1">
-                  Kampnavn / Anledning
+                  {isEnglish ? 'Match Name / Occasion' : 'Kampnavn / Anledning'}
                 </label>
                 <input
                   type="text"
                   value={formMatchName}
                   onChange={(e) => setFormMatchName(e.target.value)}
-                  placeholder="f.eks. Fredagskamp, Treningsduell, Finale"
+                  placeholder={isEnglish ? 'e.g. Friday match, Training duel, Final' : 'f.eks. Fredagskamp, Treningsduell, Finale'}
                   className="w-full bg-black border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:border-[#BFFF00] focus:outline-none"
                 />
               </div>
@@ -1066,7 +1082,11 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold text-gray-300 flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-[#BFFF00]" />
-                    <span>Velg 4 spillere fra spillerlisten ({selectedInModalCount}/4 valgt)</span>
+                    <span>
+                      {isEnglish 
+                        ? `Select 4 players from the roster (${selectedInModalCount}/4 selected)` 
+                        : `Velg 4 spillere fra spillerlisten (${selectedInModalCount}/4 valgt)`}
+                    </span>
                   </label>
                   
                   <div className="flex items-center gap-2">
@@ -1075,10 +1095,10 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         type="button"
                         onClick={handleShuffleTeams}
                         className="text-[11px] font-bold text-[#BFFF00] hover:underline flex items-center gap-1"
-                        title="Bytt om lag tilfeldig"
+                        title={isEnglish ? 'Shuffle teams randomly' : 'Bytt om lag tilfeldig'}
                       >
                         <Shuffle className="w-3 h-3" />
-                        <span>Bland lag</span>
+                        <span>{isEnglish ? 'Shuffle teams' : 'Bland lag'}</span>
                       </button>
                     )}
                     {selectedInModalCount > 0 && (
@@ -1087,7 +1107,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         onClick={handleClearSlots}
                         className="text-[11px] font-bold text-gray-400 hover:text-white"
                       >
-                        Tøm
+                        {isEnglish ? 'Clear' : 'Tøm'}
                       </button>
                     )}
                   </div>
@@ -1117,7 +1137,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                           <span className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded ${
                             slot?.startsWith('A') ? 'bg-[#BFFF00] text-black' : 'bg-cyan-400 text-black'
                           }`}>
-                            Lag {slot}
+                            {isEnglish ? 'Team ' : 'Lag '}{slot}
                           </span>
                         ) : (
                           <span className="text-[10px] text-gray-600">+</span>
@@ -1135,13 +1155,13 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                     className="text-xs font-bold text-[#BFFF00] hover:underline flex items-center gap-1 pt-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Opprett ny spiller som mangler i listen</span>
+                    <span>{isEnglish ? 'Add new player missing from the roster' : 'Opprett ny spiller som mangler i listen'}</span>
                   </button>
                 ) : (
                   <div className="flex gap-2 p-2 bg-gray-900 rounded-xl border border-gray-800 animate-in fade-in">
                     <input
                       type="text"
-                      placeholder="Navn på ny spiller..."
+                      placeholder={isEnglish ? 'Name of new player...' : 'Navn på ny spiller...'}
                       value={quickPlayerName}
                       onChange={(e) => setQuickPlayerName(e.target.value)}
                       className="flex-1 bg-black border border-gray-700 text-white rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#BFFF00]"
@@ -1153,14 +1173,14 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                       disabled={isPending || !quickPlayerName.trim()}
                       className="bg-[#BFFF00] text-black px-3 py-1.5 rounded-lg text-xs font-bold"
                     >
-                      Legg til
+                      {isEnglish ? 'Add' : 'Legg til'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsAddingQuickPlayer(false)}
                       className="px-2 text-gray-400 hover:text-white text-xs"
                     >
-                      Avbryt
+                      {isEnglish ? 'Cancel' : 'Avbryt'}
                     </button>
                   </div>
                 )}
@@ -1172,7 +1192,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 <div className="p-3.5 bg-black/60 border border-[#BFFF00]/30 rounded-2xl space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#BFFF00]">
-                      Lag A (2 spillere)
+                      {isEnglish ? 'Team A (2 players)' : 'Lag A (2 spillere)'}
                     </span>
                   </div>
 
@@ -1184,7 +1204,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         required
                         value={formTeamAPlayer1}
                         onChange={(e) => setFormTeamAPlayer1(e.target.value)}
-                        placeholder="Spiller 1 (Lag A)"
+                        placeholder={isEnglish ? 'Player 1 (Team A)' : 'Spiller 1 (Lag A)'}
                         list="allPlayersDatalist"
                         className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#BFFF00] focus:outline-none"
                       />
@@ -1206,7 +1226,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         required
                         value={formTeamAPlayer2}
                         onChange={(e) => setFormTeamAPlayer2(e.target.value)}
-                        placeholder="Spiller 2 (Lag A)"
+                        placeholder={isEnglish ? 'Player 2 (Team A)' : 'Spiller 2 (Lag A)'}
                         list="allPlayersDatalist"
                         className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#BFFF00] focus:outline-none"
                       />
@@ -1227,7 +1247,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                 <div className="p-3.5 bg-black/60 border border-cyan-400/30 rounded-2xl space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">
-                      Lag B (2 spillere)
+                      {isEnglish ? 'Team B (2 players)' : 'Lag B (2 spillere)'}
                     </span>
                   </div>
 
@@ -1239,7 +1259,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         required
                         value={formTeamBPlayer1}
                         onChange={(e) => setFormTeamBPlayer1(e.target.value)}
-                        placeholder="Spiller 1 (Lag B)"
+                        placeholder={isEnglish ? 'Player 1 (Team B)' : 'Spiller 1 (Lag B)'}
                         list="allPlayersDatalist"
                         className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
                       />
@@ -1261,7 +1281,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         required
                         value={formTeamBPlayer2}
                         onChange={(e) => setFormTeamBPlayer2(e.target.value)}
-                        placeholder="Spiller 2 (Lag B)"
+                        placeholder={isEnglish ? 'Player 2 (Team B)' : 'Spiller 2 (Lag B)'}
                         list="allPlayersDatalist"
                         className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
                       />
@@ -1289,7 +1309,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               {/* Match Format Selector */}
               <div>
                 <label className="text-xs font-extrabold text-gray-300 block mb-1">
-                  Kampformat
+                  {isEnglish ? 'Match Format' : 'Kampformat'}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
@@ -1301,8 +1321,8 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         : 'bg-black border-gray-800 text-gray-400 hover:text-white'
                     }`}
                   >
-                    <span className="block font-black">Best av 3 sett</span>
-                    <span className="text-[10px] text-gray-500 font-normal">Vanlig 3. fullt sett</span>
+                    <span className="block font-black">{isEnglish ? 'Best of 3 sets' : 'Best av 3 sett'}</span>
+                    <span className="text-[10px] text-gray-500 font-normal">{isEnglish ? 'Standard full 3rd set' : 'Vanlig 3. fullt sett'}</span>
                   </button>
 
                   <button
@@ -1315,7 +1335,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                     }`}
                   >
                     <span className="block font-black">Super-Tiebreak</span>
-                    <span className="text-[10px] text-gray-500 font-normal">10p i 3. avgjørende sett</span>
+                    <span className="text-[10px] text-gray-500 font-normal">{isEnglish ? '10 pts in deciding 3rd set' : '10p i 3. avgjørende sett'}</span>
                   </button>
 
                   <button
@@ -1327,8 +1347,8 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         : 'bg-black border-gray-800 text-gray-400 hover:text-white'
                     }`}
                   >
-                    <span className="block font-black">1 Sett (Kort)</span>
-                    <span className="text-[10px] text-gray-500 font-normal">Første til 6 games</span>
+                    <span className="block font-black">{isEnglish ? '1 Set (Short)' : '1 Sett (Kort)'}</span>
+                    <span className="text-[10px] text-gray-500 font-normal">{isEnglish ? 'First to 6 games' : 'Første til 6 games'}</span>
                   </button>
                 </div>
               </div>
@@ -1336,7 +1356,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
               {/* Deuce Rule Selector: Golden Point vs Advantage */}
               <div>
                 <label className="text-xs font-extrabold text-gray-300 block mb-1">
-                  Regel ved 40-40 (Deuce)
+                  {isEnglish ? 'Rule at 40-40 (Deuce)' : 'Regel ved 40-40 (Deuce)'}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
@@ -1350,10 +1370,12 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   >
                     <span className="block font-black flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Golden point (standard)</span>
+                      <span>{isEnglish ? 'Golden point (standard)' : 'Golden point (standard)'}</span>
                     </span>
                     <span className="text-[10px] text-gray-500 font-normal mt-0.5 block">
-                      Avgjørende ball ved 40-40 (mottaker velger returside)
+                      {isEnglish 
+                        ? 'Deciding ball at 40-40 (receiver chooses return side)' 
+                        : 'Avgjørende ball ved 40-40 (mottaker velger returside)'}
                     </span>
                   </button>
 
@@ -1366,9 +1388,11 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                         : 'bg-black border-gray-800 text-gray-400 hover:text-white'
                     }`}
                   >
-                    <span className="block font-black">Fordel (Advantage)</span>
+                    <span className="block font-black">{isEnglish ? 'Advantage' : 'Fordel (Advantage)'}</span>
                     <span className="text-[10px] text-gray-500 font-normal mt-0.5 block">
-                      Klassisk fordel inn / ut inntil 2 poengs ledelse
+                      {isEnglish 
+                        ? 'Classic advantage in / out until 2 points lead' 
+                        : 'Klassisk fordel inn / ut inntil 2 poengs ledelse'}
                     </span>
                   </button>
                 </div>
@@ -1381,7 +1405,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   onClick={() => setIsNewMatchModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition"
                 >
-                  Avbryt
+                  {isEnglish ? 'Cancel' : 'Avbryt'}
                 </button>
                 <button
                   type="submit"
@@ -1389,7 +1413,7 @@ export default function StandaloneMatchView({ allPlayers }: StandaloneMatchViewP
                   className="px-6 py-2.5 bg-[#BFFF00] text-black font-black text-xs rounded-xl hover:bg-[#b0eb00] transition active:scale-95 disabled:opacity-40 shadow-[0_0_15px_rgba(191,255,0,0.3)] flex items-center gap-1.5"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isSubmitting ? 'Oppretter...' : 'Start Ordinær Kamp'}</span>
+                  <span>{isSubmitting ? (isEnglish ? 'Creating...' : 'Oppretter...') : (isEnglish ? 'Start Regular Match' : 'Start Ordinær Kamp')}</span>
                 </button>
               </div>
             </form>

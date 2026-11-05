@@ -20,6 +20,7 @@ import {
   Flame,
   LayoutGrid
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 type AmericanoCalculatorModalProps = {
   onClose: () => void;
@@ -45,6 +46,7 @@ export default function AmericanoCalculatorModal({
   onStartTournamentWithSettings,
   confirmButtonLabel
 }: AmericanoCalculatorModalProps) {
+  const { t, isEnglish } = useTranslation();
   // Inputs
   const [totalTimeMinutes, setTotalTimeMinutes] = useState<number>(90); // standard booking: 90 min
   const [playerCount, setPlayerCount] = useState<number>(
@@ -236,7 +238,7 @@ export default function AmericanoCalculatorModal({
       const wEnd = currentTotalMin + warmupMinutes;
       items.push({
         type: 'warmup',
-        label: 'Oppvarming på banen',
+        label: isEnglish ? 'Court warm-up & rally' : 'Oppvarming på banen',
         start: formatTime(currentTotalMin),
         end: formatTime(wEnd),
         duration: warmupMinutes
@@ -250,7 +252,7 @@ export default function AmericanoCalculatorModal({
       items.push({
         type: 'match',
         roundNumber: r,
-        label: `Runde ${r} (${targetScore} poeng)`,
+        label: isEnglish ? `Round ${r} (${targetScore} pts)` : `Runde ${r} (${targetScore} poeng)`,
         start: formatTime(currentTotalMin),
         end: formatTime(mEnd),
         duration: Math.round(matchDurationMinutes * 10) / 10
@@ -262,7 +264,7 @@ export default function AmericanoCalculatorModal({
         const pEnd = currentTotalMin + pauseDuration;
         items.push({
           type: 'pause',
-          label: 'Pause & rotering',
+          label: isEnglish ? 'Break & rotation' : 'Pause & rotering',
           start: formatTime(currentTotalMin),
           end: formatTime(pEnd),
           duration: pauseDuration
@@ -272,22 +274,22 @@ export default function AmericanoCalculatorModal({
     }
 
     return items;
-  }, [maxRoundsPossible, startTimeStr, warmupMinutes, matchDurationMinutes, targetScore, pauseDuration]);
+  }, [maxRoundsPossible, startTimeStr, warmupMinutes, matchDurationMinutes, targetScore, pauseDuration, isEnglish]);
 
   // Handle Copy schedule to clipboard
   const handleCopySchedule = () => {
     if (scheduleTimeline.length === 0) return;
     
     const lines = [
-      `🎾 PADEL AMERICANO TIDSPLAN (${totalTimeMinutes} min)`,
-      `👥 ${playerCount} spillere | 🏟️ ${courtCount} bane(r) | 🎯 ${targetScore} poeng/kamp`,
-      `⏱️ Rekker: ${maxRoundsPossible} runder (${actualTimeUsed} min brukt)\n`,
+      `🎾 ${isEnglish ? 'PADEL AMERICANO SCHEDULE' : 'PADEL AMERICANO TIDSPLAN'} (${totalTimeMinutes} min)`,
+      `👥 ${playerCount} ${isEnglish ? 'players' : 'spillere'} | 🏟️ ${courtCount} ${courtCount === 1 ? (isEnglish ? 'court' : 'bane') : (isEnglish ? 'courts' : 'baner')} | 🎯 ${targetScore} ${isEnglish ? 'pts/match' : 'poeng/kamp'}`,
+      `⏱️ ${isEnglish ? 'Capacity:' : 'Rekker:'} ${maxRoundsPossible} ${maxRoundsPossible === 1 ? (isEnglish ? 'round' : 'runde') : (isEnglish ? 'rounds' : 'runder')} (${actualTimeUsed} ${isEnglish ? 'min used' : 'min brukt'})\n`,
       ...scheduleTimeline.map(item => {
         if (item.type === 'warmup') return `🔥 ${item.start} - ${item.end}: ${item.label} (${item.duration} min)`;
         if (item.type === 'match') return `🎾 ${item.start} - ${item.end}: ${item.label}`;
         return `⏸️ ${item.start} - ${item.end}: ${item.label} (${item.duration}m)`;
       }),
-      `\nOrganisert med PadelFlex`
+      `\n${isEnglish ? 'Organized with PadelFlex' : 'Organisert med PadelFlex'}`
     ];
 
     navigator.clipboard.writeText(lines.join('\n')).then(() => {
@@ -316,14 +318,14 @@ export default function AmericanoCalculatorModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <h3 className="font-extrabold text-sm sm:text-lg text-white truncate">
-                    Americano Tidskalkulator
+                    {isEnglish ? 'Americano Time Calculator' : 'Americano Tidskalkulator'}
                   </h3>
                   <span className="px-1.5 sm:px-2 py-0.5 bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00] text-[9px] sm:text-[10px] font-mono font-bold rounded-full uppercase shrink-0">
-                    Beregner
+                    {isEnglish ? 'Calculator' : 'Beregner'}
                   </span>
                 </div>
                 <p className="text-[11px] sm:text-xs text-gray-400 truncate sm:whitespace-normal">
-                  Finn nøyaktig hvor mange runder dere rekker på banetiden
+                  {isEnglish ? 'Find exactly how many rounds you can fit in your court booking' : 'Finn nøyaktig hvor mange runder dere rekker på banetiden'}
                 </p>
               </div>
             </div>
@@ -332,7 +334,7 @@ export default function AmericanoCalculatorModal({
               type="button"
               onClick={onClose}
               className="p-1.5 sm:p-2 text-gray-400 hover:text-white rounded-xl hover:bg-gray-800 transition shrink-0 ml-2"
-              aria-label="Lukk"
+              aria-label={isEnglish ? 'Close' : 'Lukk'}
             >
               <X className="w-5 h-5" />
             </button>
@@ -345,31 +347,33 @@ export default function AmericanoCalculatorModal({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#BFFF00] font-black flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Beregnet resultat
+                <Sparkles className="w-3.5 h-3.5" /> {isEnglish ? 'Calculated Result' : 'Beregnet resultat'}
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl sm:text-4xl font-black font-mono text-[#BFFF00]">
                   {maxRoundsPossible}
                 </span>
                 <span className="text-base sm:text-lg font-extrabold text-white">
-                  {maxRoundsPossible === 1 ? 'runde' : 'runder'}
+                  {maxRoundsPossible === 1 ? (isEnglish ? 'round' : 'runde') : (isEnglish ? 'rounds' : 'runder')}
                 </span>
               </div>
               <p className="text-xs text-gray-300 mt-1">
-                Totalt <strong className="text-white">{actualTimeUsed} minutter</strong> av {totalTimeMinutes} min booking ({remainingBufferMinutes} min buffer)
+                {isEnglish
+                  ? `Total ${actualTimeUsed} minutes of ${totalTimeMinutes} min booking (${remainingBufferMinutes} min buffer)`
+                  : `Totalt ${actualTimeUsed} minutter av ${totalTimeMinutes} min booking (${remainingBufferMinutes} min buffer)`}
               </p>
             </div>
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 shrink-0 font-mono text-xs">
               <div className="bg-black/50 border border-gray-800/80 rounded-xl p-2 sm:p-2.5">
-                <span className="text-[10px] text-gray-400 block">Varighet/kamp</span>
+                <span className="text-[10px] text-gray-400 block">{isEnglish ? 'Duration/match' : 'Varighet/kamp'}</span>
                 <span className="font-extrabold text-white text-sm">
                   {Math.floor(matchDurationMinutes)}m {Math.round((matchDurationMinutes % 1) * 60)}s
                 </span>
               </div>
               <div className="bg-black/50 border border-gray-800/80 rounded-xl p-2 sm:p-2.5">
-                <span className="text-[10px] text-gray-400 block">Pause/bytte</span>
+                <span className="text-[10px] text-gray-400 block">{isEnglish ? 'Pause/swap' : 'Pause/bytte'}</span>
                 <span className="font-extrabold text-white text-sm">{pauseDuration} min</span>
               </div>
             </div>
@@ -382,14 +386,14 @@ export default function AmericanoCalculatorModal({
                 <div className="flex items-start gap-2 text-green-300 bg-green-500/10 border border-green-500/30 p-2.5 rounded-xl">
                   <Check className="w-4 h-4 shrink-0 mt-0.5 text-green-400" />
                   <div>
-                    <strong>100% Rettferdig Americano (4 spillere):</strong> Alle 4 spiller mot og med hverandre nøyaktig {maxRoundsPossible / 3} gang(er).
+                    <strong>{isEnglish ? '100% Fair Americano (4 players):' : '100% Rettferdig Americano (4 spillere):'}</strong> {isEnglish ? `All 4 play with and against each other exactly ${maxRoundsPossible / 3} time(s).` : `Alle 4 spiller mot og med hverandre nøyaktig ${maxRoundsPossible / 3} gang(er).`}
                   </div>
                 </div>
               ) : (
                 <div className="flex items-start gap-2 text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl">
                   <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
                   <div>
-                    <strong>Merk ved 4 spillere:</strong> En hel Americano-syklus der alle spiller med alle krever <strong>3 runder</strong> (eller 6 runder). Dere rekker {maxRoundsPossible} runder.
+                    <strong>{isEnglish ? 'Note with 4 players:' : 'Merk ved 4 spillere:'}</strong> {isEnglish ? `A complete Americano cycle requires 3 rounds (or 6 rounds). You have time for ${maxRoundsPossible} rounds.` : `En hel Americano-syklus der alle spiller med alle krever 3 runder (eller 6 runder). Dere rekker ${maxRoundsPossible} runder.`}
                     {recommendedFairRounds > 0 && recommendedFairRounds !== maxRoundsPossible && (
                       <button
                         type="button"
@@ -400,7 +404,7 @@ export default function AmericanoCalculatorModal({
                         }}
                         className="block mt-1 font-bold underline text-[#BFFF00] hover:text-white"
                       >
-                        Juster til {recommendedFairRounds} runder ({Math.round(calcTotalTimeForRounds(recommendedFairRounds) + warmupMinutes)} min)?
+                        {isEnglish ? `Adjust to ${recommendedFairRounds} rounds (${Math.round(calcTotalTimeForRounds(recommendedFairRounds) + warmupMinutes)} min)?` : `Juster til ${recommendedFairRounds} runder (${Math.round(calcTotalTimeForRounds(recommendedFairRounds) + warmupMinutes)} min)?`}
                       </button>
                     )}
                   </div>
@@ -410,14 +414,14 @@ export default function AmericanoCalculatorModal({
               <div className="flex items-start gap-2 text-green-300 bg-green-500/10 border border-green-500/30 p-2.5 rounded-xl">
                 <Check className="w-4 h-4 shrink-0 mt-0.5 text-green-400" />
                 <div>
-                  <strong>Lik spilletid på alle:</strong> Alle {playerCount} spillere spiller i samtlige runder ({maxRoundsPossible} kamper per person).
+                  <strong>{isEnglish ? 'Equal playtime for all:' : 'Lik spilletid på alle:'}</strong> {isEnglish ? `All ${playerCount} players play in every round (${maxRoundsPossible} matches per person).` : `Alle ${playerCount} spillere spiller i samtlige runder (${maxRoundsPossible} kamper per person).`}
                   {maxRoundsPossible >= playerCount - 1 ? (
                     <span className="block text-[11px] text-gray-300 mt-0.5">
-                      🌟 Dere rekker en full rotasjon der alle har vært makkere med alle ({playerCount - 1} runder)!
+                      {isEnglish ? `🌟 You can fit a full rotation where everyone partners with everyone (${playerCount - 1} rounds)!` : `🌟 Dere rekker en full rotasjon der alle har vært makkere med alle (${playerCount - 1} runder)!`}
                     </span>
                   ) : (
                     <span className="block text-[11px] text-gray-300 mt-0.5">
-                      (For å rekke full rotasjon der alle er makkere med alle kreves {playerCount - 1} runder).
+                      {isEnglish ? `(A full rotation with all partner combinations requires ${playerCount - 1} rounds).` : `(For å rekke full rotasjon der alle er makkere med alle kreves ${playerCount - 1} runder).`}
                     </span>
                   )}
                 </div>
@@ -427,16 +431,16 @@ export default function AmericanoCalculatorModal({
                 <div className="flex items-start gap-2 text-green-300 bg-green-500/10 border border-green-500/30 p-2.5 rounded-xl">
                   <Check className="w-4 h-4 shrink-0 mt-0.5 text-green-400" />
                   <div>
-                    <strong>Rettferdig rotasjon ({playerCount} spillere):</strong> Ved {maxRoundsPossible} runder får alle spillere nøyaktig {statsPerPlayer.matches} kamper hver og {statsPerPlayer.rests} runder pause!
+                    <strong>{isEnglish ? `Fair rotation (${playerCount} players):` : `Rettferdig rotasjon (${playerCount} spillere):`}</strong> {isEnglish ? `With ${maxRoundsPossible} rounds, every player gets exactly ${statsPerPlayer.matches} matches each and ${statsPerPlayer.rests} resting rounds!` : `Ved ${maxRoundsPossible} runder får alle spillere nøyaktig ${statsPerPlayer.matches} kamper hver og ${statsPerPlayer.rests} runder pause!`}
                   </div>
                 </div>
               ) : (
                 <div className="flex items-start gap-2 text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl">
                   <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
                   <div>
-                    <strong>Ujevn pausefordeling ved {maxRoundsPossible} runder:</strong> Noen spillere vil få 1 kamp mer enn andre.
+                    <strong>{isEnglish ? `Uneven rest distribution at ${maxRoundsPossible} rounds:` : `Ujevn pausefordeling ved ${maxRoundsPossible} runder:`}</strong> {isEnglish ? 'Some players will play 1 match more than others.' : 'Noen spillere vil få 1 kamp mer enn andre.'}
                     <span className="block mt-0.5 text-gray-300">
-                      💡 For 100% lik spilletid må dere spille et multiplum av <strong>{fairRoundStep} runder</strong> (f.eks. {recommendedFairRounds} runder).
+                      {isEnglish ? `💡 For 100% equal playtime, play a multiple of ${fairRoundStep} rounds (e.g. ${recommendedFairRounds} rounds).` : `💡 For 100% lik spilletid må dere spille et multiplum av ${fairRoundStep} runder (f.eks. ${recommendedFairRounds} runder).`}
                     </span>
                   </div>
                 </div>
@@ -455,7 +459,7 @@ export default function AmericanoCalculatorModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#BFFF00]" /> Tilgjengelig halltid
+                  <Clock className="w-3.5 h-3.5 text-[#BFFF00]" /> {isEnglish ? 'Available court time' : 'Tilgjengelig halltid'}
                 </label>
                 <span className="text-xs font-mono font-black text-[#BFFF00]">{totalTimeMinutes} min</span>
               </div>
@@ -493,9 +497,9 @@ export default function AmericanoCalculatorModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-cyan-400" /> Antall spillere
+                  <Users className="w-3.5 h-3.5 text-cyan-400" /> {isEnglish ? 'Number of players' : 'Antall spillere'}
                 </label>
-                <span className="text-xs font-mono font-black text-cyan-400">{playerCount} spillere</span>
+                <span className="text-xs font-mono font-black text-cyan-400">{playerCount} {isEnglish ? 'players' : 'spillere'}</span>
               </div>
 
               {/* Raske presets for spillere */}
@@ -553,11 +557,11 @@ export default function AmericanoCalculatorModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                  <LayoutGrid className="w-3.5 h-3.5 text-gray-400" /> Antall baner
+                  <LayoutGrid className="w-3.5 h-3.5 text-gray-400" /> {isEnglish ? 'Number of courts' : 'Antall baner'}
                 </label>
                 <span className="text-xs font-mono text-gray-400">
-                  {courtCount} {courtCount === 1 ? 'bane' : 'baner'}
-                  {overrideCourtCount !== null && ' (overstyrt)'}
+                  {courtCount} {courtCount === 1 ? (isEnglish ? 'court' : 'bane') : (isEnglish ? 'courts' : 'baner')}
+                  {overrideCourtCount !== null && (isEnglish ? ' (overridden)' : ' (overstyrt)')}
                 </span>
               </div>
 
@@ -573,7 +577,7 @@ export default function AmericanoCalculatorModal({
                         : 'bg-gray-850 text-gray-400 hover:text-white'
                     }`}
                   >
-                    {c} {c === 1 ? 'bane' : 'baner'}
+                    {c} {c === 1 ? (isEnglish ? 'court' : 'bane') : (isEnglish ? 'courts' : 'baner')}
                   </button>
                 ))}
               </div>
@@ -588,9 +592,9 @@ export default function AmericanoCalculatorModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400" /> Målscore per kamp
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" /> {isEnglish ? 'Target score per match' : 'Målscore per kamp'}
                 </label>
-                <span className="text-xs font-mono font-black text-amber-400">{targetScore} poeng</span>
+                <span className="text-xs font-mono font-black text-amber-400">{targetScore} {isEnglish ? 'points' : 'poeng'}</span>
               </div>
 
               {/* Raske presets for poeng */}
@@ -626,12 +630,12 @@ export default function AmericanoCalculatorModal({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-[#BFFF00]" /> Snitt-tid per 24 poeng
+                  <Zap className="w-3.5 h-3.5 text-[#BFFF00]" /> {isEnglish ? 'Average time per 24 points' : 'Snitt-tid per 24 poeng'}
                 </label>
                 <span className="text-xs font-mono font-black text-[#BFFF00]">{avgDurationPer24} min</span>
               </div>
               <p className="text-[10px] text-gray-400 mb-1.5">
-                Erfaringsmessig tar 24p ca. 10 min. Juster hvis gruppen spiller raskere eller saktere.
+                {isEnglish ? 'Experience shows 24p takes ~10 min. Adjust if your group plays faster or slower.' : 'Erfaringsmessig tar 24p ca. 10 min. Juster hvis gruppen spiller raskere eller saktere.'}
               </p>
               <div className="flex items-center gap-2">
                 <input
@@ -650,7 +654,7 @@ export default function AmericanoCalculatorModal({
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-800/80">
               <div>
                 <label className="text-[11px] font-bold text-gray-300 block mb-1">
-                  Pause mellom kamper
+                  {isEnglish ? 'Pause between matches' : 'Pause mellom kamper'}
                 </label>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3].map((p) => (
@@ -670,7 +674,7 @@ export default function AmericanoCalculatorModal({
 
               <div>
                 <label className="text-[11px] font-bold text-gray-300 block mb-1">
-                  Oppvarming i starten
+                  {isEnglish ? 'Warm-up at start' : 'Oppvarming i starten'}
                 </label>
                 <div className="flex items-center gap-1">
                   {[0, 5, 10].map((w) => (
@@ -696,7 +700,7 @@ export default function AmericanoCalculatorModal({
         {/* ================= 3. SMARTE ANBEFALINGER (HVA OM VI ENDRER POENG?) ================= */}
         <div className="bg-black/40 border border-gray-800/90 rounded-2xl p-3.5 space-y-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-[#BFFF00] font-black flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Smarte forslag: Sammenlign poengsummer for {totalTimeMinutes} min
+            <TrendingUp className="w-3.5 h-3.5" /> {isEnglish ? `Smart suggestions: Compare scores for ${totalTimeMinutes} min` : `Smarte forslag: Sammenlign poengsummer for ${totalTimeMinutes} min`}
           </span>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -712,18 +716,18 @@ export default function AmericanoCalculatorModal({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black font-mono text-white">{s.points} poeng</span>
+                  <span className="text-xs font-black font-mono text-white">{s.points} {isEnglish ? 'points' : 'poeng'}</span>
                   {s.isFair && (
                     <span className="text-[9px] font-bold px-1.5 py-0.2 bg-green-500/20 text-green-400 rounded">
-                      Rettferdig
+                      {isEnglish ? 'Fair' : 'Rettferdig'}
                     </span>
                   )}
                 </div>
                 <div className="text-[11px] text-gray-300 font-mono mt-1">
-                  <strong>{s.rounds}</strong> runder ({s.totalTime}m)
+                  <strong>{s.rounds}</strong> {isEnglish ? 'rounds' : 'runder'} ({s.totalTime}m)
                 </div>
                 <div className="text-[9px] text-gray-500 font-mono">
-                  ca. {s.matchMin} min/kamp
+                  {isEnglish ? `~${s.matchMin} min/match` : `ca. ${s.matchMin} min/kamp`}
                 </div>
               </button>
             ))}
@@ -740,14 +744,14 @@ export default function AmericanoCalculatorModal({
                 className="text-xs font-bold text-white flex items-center gap-1 hover:text-[#BFFF00] transition"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#BFFF00]" />
-                <span>{showDetailedSchedule ? 'Skjul tidsplan' : 'Vis kampprogram med klokkeslett'}</span>
+                <span>{showDetailedSchedule ? (isEnglish ? 'Hide schedule' : 'Skjul tidsplan') : (isEnglish ? 'Show match schedule with times' : 'Vis kampprogram med klokkeslett')}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDetailedSchedule ? 'rotate-90' : ''}`} />
               </button>
             </div>
 
             {showDetailedSchedule && (
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-gray-400">Start:</span>
+                <span className="text-[10px] text-gray-400">{isEnglish ? 'Start:' : 'Start:'}</span>
                 <input
                   type="time"
                   value={startTimeStr}
@@ -762,12 +766,12 @@ export default function AmericanoCalculatorModal({
                   {copiedSchedule ? (
                     <>
                       <Check className="w-3 h-3 text-green-400" />
-                      <span className="text-green-400">Kopiert!</span>
+                      <span className="text-green-400">{isEnglish ? 'Copied!' : 'Kopiert!'}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3 h-3 text-gray-400" />
-                      <span>Kopier plan</span>
+                      <span>{isEnglish ? 'Copy schedule' : 'Kopier plan'}</span>
                     </>
                   )}
                 </button>
@@ -802,7 +806,7 @@ export default function AmericanoCalculatorModal({
         {/* ================= 5. FOOTER ACTIONS ================= */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-gray-800/80">
           <div className="text-[11px] text-gray-400 font-mono text-center sm:text-left">
-            🎯 Tips: Spiller dere med 21 eller 24 poeng rekker dere flest mulig jevne kamper.
+            {isEnglish ? '🎯 Tip: Playing with 21 or 24 points fits the most balanced matches.' : '🎯 Tips: Spiller dere med 21 eller 24 poeng rekker dere flest mulig jevne kamper.'}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -832,7 +836,7 @@ export default function AmericanoCalculatorModal({
                 ) : (
                   <Play className="w-3.5 h-3.5 fill-current" />
                 )}
-                <span>{confirmButtonLabel || (onApplySettings ? 'Overfør til turnering' : 'Bruk dette oppsettet')}</span>
+                <span>{confirmButtonLabel || (onApplySettings ? (isEnglish ? 'Apply to tournament' : 'Overfør til turnering') : (isEnglish ? 'Use these settings' : 'Bruk dette oppsettet'))}</span>
               </button>
             )}
 
@@ -841,7 +845,7 @@ export default function AmericanoCalculatorModal({
               onClick={onClose}
               className="px-4 py-2.5 bg-gray-850 hover:bg-gray-800 text-gray-300 hover:text-white font-bold text-xs rounded-xl transition"
             >
-              Lukk
+              {t.common.close}
             </button>
           </div>
         </div>

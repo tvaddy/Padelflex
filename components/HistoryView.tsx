@@ -22,6 +22,7 @@ import EditMatchModal from './EditMatchModal';
 import { formatDurationMinutes, formatTimeOnly, isMatchEditable } from '@/lib/match-utils';
 import { reopenTournament, deleteTournament } from '@/app/actions';
 import { useAuth } from './AuthContext';
+import { useTranslation } from '@/lib/i18n';
 
 type HistoryViewProps = {
   tournamentHistory: any[];
@@ -29,6 +30,7 @@ type HistoryViewProps = {
 };
 
 export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
+  const { t, isEnglish } = useTranslation();
   const [selectedTournament, setSelectedTournament] = useState<any | null>(null);
 
   return (
@@ -37,22 +39,26 @@ export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
       <div>
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-0.5 bg-gray-800 border border-gray-700 text-gray-300 rounded-full text-xs font-extrabold uppercase tracking-wider">
-            Historikk
+            {t.history.title}
           </span>
-          <span className="text-xs text-gray-500 font-mono">{tournamentHistory.length} fullførte turneringer</span>
+          <span className="text-xs text-gray-500 font-mono">
+            {tournamentHistory.length} {isEnglish ? 'completed tournaments' : 'fullførte turneringer'}
+          </span>
         </div>
-        <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">Tidligere Turneringer</h2>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">{t.history.title}</h2>
         <p className="text-xs text-gray-400 mt-0.5">
-          Se resultater, gjennomsnittlig kampvarighet, slutt-tabeller og kamper for tidligere enkeltturneringer og ligarunder.
+          {t.history.subtitle}
         </p>
       </div>
 
       {tournamentHistory.length === 0 ? (
         <div className="p-10 sm:p-12 text-center bg-gray-900/40 border border-gray-800 border-dashed rounded-3xl">
           <History className="w-14 h-14 text-gray-700 mx-auto mb-3" />
-          <h3 className="text-lg sm:text-xl font-bold text-gray-200">Ingen fullførte turneringer ennå</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-200">{t.history.noHistory}</h3>
           <p className="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mt-1">
-            Når du fullfører en turnering (enten enkeltturnering eller ligarunde), arkiveres den her med komplett sluttresultat og tidsstatistikk.
+            {isEnglish 
+              ? 'When you complete a tournament, it will be archived here with complete final standings and timing statistics.' 
+              : 'Når du fullfører en turnering (enten enkeltturnering eller ligarunde), arkiveres den her med komplett sluttresultat og tidsstatistikk.'}
           </p>
         </div>
       ) : (
@@ -60,7 +66,7 @@ export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
           {tournamentHistory.map((tourney) => {
             const isLeague = !!tourney.leagueId;
             const winner = tourney.participants && tourney.participants[0];
-            const dateStr = new Date(tourney.createdAt).toLocaleDateString('no-NB', {
+            const dateStr = new Date(tourney.createdAt).toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', {
               day: '2-digit',
               month: 'short',
               year: 'numeric'
@@ -80,11 +86,11 @@ export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
                   <div className="flex items-center justify-between mb-2">
                     {isLeague ? (
                       <span className="px-2.5 py-0.5 bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00] text-[10px] font-extrabold rounded-full uppercase tracking-wider flex items-center gap-1">
-                        <Trophy className="w-3 h-3" /> Liga: {tourney.league?.name}
+                        <Trophy className="w-3 h-3" /> {isEnglish ? 'League' : 'Liga'}: {tourney.league?.name}
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-extrabold rounded-full uppercase tracking-wider flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> Enkeltturnering
+                        <Zap className="w-3 h-3" /> {t.tournamentModal.singleTournamentTitle}
                       </span>
                     )}
 
@@ -95,13 +101,13 @@ export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
                     {tourney.name}
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {tourney.type} • {tourney.targetScore}p per kamp • {totalMatches} kamper
+                    {tourney.type} • {tourney.targetScore}p {isEnglish ? 'per match' : 'per kamp'} • {totalMatches} {isEnglish ? 'matches' : 'kamper'}
                   </p>
 
                   {/* Average match duration indicator */}
                   <div className="mt-2.5 flex items-center gap-1.5 text-xs text-gray-400">
                     <Clock className="w-3.5 h-3.5 text-[#BFFF00]" />
-                    <span>Gj.snitt varighet: <strong className="text-white font-mono">{avgMinutes} min / kamp</strong></span>
+                    <span>{isEnglish ? 'Avg duration:' : 'Gj.snitt varighet:'} <strong className="text-white font-mono">{avgMinutes} {isEnglish ? 'min / match' : 'min / kamp'}</strong></span>
                   </div>
                 </div>
 
@@ -115,12 +121,12 @@ export default function HistoryView({ tournamentHistory }: HistoryViewProps) {
                         <span className="font-mono text-[#BFFF00] font-bold">({winner.totalPoints}p)</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-500">Ingen resultater</span>
+                      <span className="text-xs text-gray-500">{isEnglish ? 'No results' : 'Ingen resultater'}</span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-1 text-xs text-gray-400 group-hover:text-white transition">
-                    <span>{tourney.participants?.length || 0} spillere</span>
+                    <span>{tourney.participants?.length || 0} {isEnglish ? 'players' : 'spillere'}</span>
                     <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[#BFFF00]" />
                   </div>
                 </div>
@@ -149,12 +155,13 @@ function PastTournamentDetailsModal({
   onClose: () => void;
 }) {
   const { isAdmin } = useAuth();
+  const { t, isEnglish } = useTranslation();
   const [editingMatch, setEditingMatch] = useState<any | null>(null);
   const [resultCardData, setResultCardData] = useState<{ type: 'match' | 'tournament'; data: any } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const isLeague = !!tournament.leagueId;
-  const dateStr = new Date(tournament.createdAt).toLocaleDateString('no-NB', {
+  const dateStr = new Date(tournament.createdAt).toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
@@ -186,26 +193,26 @@ function PastTournamentDetailsModal({
   const canDelete = isAdmin || isToday();
 
   const handleReopen = () => {
-    if (confirm(`Vil du gjenåpne turneringen "${tournament.name}"? Den vil settes som aktiv igjen.`)) {
+    if (confirm(isEnglish ? `Do you want to reopen "${tournament.name}"? It will become active again.` : `Vil du gjenåpne turneringen "${tournament.name}"? Den vil settes som aktiv igjen.`)) {
       startTransition(async () => {
         const res = await reopenTournament(tournament.id);
         if (res.success) {
           onClose();
         } else {
-          alert(res.error || 'Kunne ikke gjenåpne turnering.');
+          alert(res.error || (isEnglish ? 'Could not reopen tournament.' : 'Kunne ikke gjenåpne turnering.'));
         }
       });
     }
   };
 
   const handleDelete = () => {
-    if (confirm(`Er du sikker på at du vil slette turneringen "${tournament.name}"? Dette kan ikke angres.`)) {
+    if (confirm(isEnglish ? `Are you sure you want to delete "${tournament.name}"? This cannot be undone.` : `Er du sikker på at du vil slette turneringen "${tournament.name}"? Dette kan ikke angres.`)) {
       startTransition(async () => {
         const res = await deleteTournament(tournament.id);
         if (res.success) {
           onClose();
         } else {
-          alert(res.error || 'Kunne ikke slette turnering.');
+          alert(res.error || (isEnglish ? 'Could not delete tournament.' : 'Kunne ikke slette turnering.'));
         }
       });
     }
@@ -223,11 +230,11 @@ function PastTournamentDetailsModal({
           <div className="flex flex-wrap items-center gap-2 mb-1.5 pr-8">
             {isLeague ? (
               <span className="px-2.5 py-0.5 bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00] text-[10px] font-extrabold rounded-full uppercase tracking-wider">
-                Liga: {tournament.league?.name}
+                {isEnglish ? 'League' : 'Liga'}: {tournament.league?.name}
               </span>
             ) : (
               <span className="px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-extrabold rounded-full uppercase tracking-wider">
-                Enkeltturnering
+                {t.tournamentModal.singleTournamentTitle}
               </span>
             )}
             <span className="text-xs text-gray-500 font-mono">{dateStr}</span>
@@ -235,12 +242,12 @@ function PastTournamentDetailsModal({
 
           <h2 className="text-xl sm:text-2xl font-extrabold text-white break-words pr-8">{tournament.name}</h2>
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 mt-1">
-            <span>{tournament.type} • {tournament.targetScore}p per kamp</span>
+            <span>{tournament.type} • {tournament.targetScore}p {isEnglish ? 'per match' : 'per kamp'}</span>
             <span>•</span>
-            <span>{(tournament.matches || []).length} kamper fullført</span>
+            <span>{(tournament.matches || []).length} {isEnglish ? 'matches completed' : 'kamper fullført'}</span>
             <span>•</span>
             <span className="flex items-center gap-1 text-[#BFFF00] font-bold font-mono">
-              <Clock className="w-3 h-3" /> Gj.snitt {avgMinutes} min / kamp
+              <Clock className="w-3 h-3" /> {isEnglish ? 'Avg' : 'Gj.snitt'} {avgMinutes} {isEnglish ? 'min / match' : 'min / kamp'}
             </span>
           </div>
 
@@ -255,7 +262,7 @@ function PastTournamentDetailsModal({
               className="px-3.5 py-1.5 bg-[#BFFF00] hover:bg-[#b0eb00] text-black font-extrabold rounded-xl text-xs flex items-center gap-1.5 transition shadow-[0_0_12px_rgba(191,255,0,0.25)]"
             >
               <Share2 className="w-3.5 h-3.5" />
-              <span>Del resultatkort</span>
+              <span>{t.resultCard.shareBtn}</span>
             </button>
 
             {canReopen && (
@@ -264,10 +271,10 @@ function PastTournamentDetailsModal({
                 onClick={handleReopen}
                 disabled={isPending}
                 className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
-                title={isAdmin ? 'Gjenåpne turnering (Administrator)' : 'Gjenåpne turnering (samme dag)'}
+                title={isAdmin ? (isEnglish ? 'Reopen tournament (Admin)' : 'Gjenåpne turnering (Administrator)') : (isEnglish ? 'Reopen tournament (same day)' : 'Gjenåpne turnering (samme dag)')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Gjenåpne</span>
+                <span>{t.history.reopen}</span>
               </button>
             )}
 
@@ -277,10 +284,10 @@ function PastTournamentDetailsModal({
                 onClick={handleDelete}
                 disabled={isPending}
                 className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
-                title={isAdmin ? 'Slett turnering permanent' : 'Slett turnering (samme dag)'}
+                title={isAdmin ? (isEnglish ? 'Delete tournament permanently' : 'Slett turnering permanent') : (isEnglish ? 'Delete tournament (same day)' : 'Slett turnering (samme dag)')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Slett</span>
+                <span>{t.history.delete}</span>
               </button>
             )}
           </div>
@@ -289,7 +296,7 @@ function PastTournamentDetailsModal({
           <div className="mt-5">
             <div className="flex items-center justify-between mb-2.5">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-[#BFFF00]" /> Slutt-tabell
+                <Trophy className="w-4 h-4 text-[#BFFF00]" /> {isEnglish ? 'Final Standings' : 'Slutt-tabell'}
               </h4>
             </div>
             <div className="bg-black/40 rounded-2xl border border-gray-800 overflow-x-auto w-full max-w-full">
@@ -297,9 +304,9 @@ function PastTournamentDetailsModal({
                 <thead className="text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-800 bg-gray-900/40">
                   <tr>
                     <th className="px-3 sm:px-4 py-2.5 text-center w-10">#</th>
-                    <th className="px-3 sm:px-4 py-2.5">Spiller</th>
-                    <th className="px-3 sm:px-4 py-2.5 text-center">S / U / T</th>
-                    <th className="px-3 sm:px-4 py-2.5 text-right font-bold text-white">Poeng</th>
+                    <th className="px-3 sm:px-4 py-2.5">{t.tournamentView.player}</th>
+                    <th className="px-3 sm:px-4 py-2.5 text-center">{isEnglish ? 'W / D / L' : 'S / U / T'}</th>
+                    <th className="px-3 sm:px-4 py-2.5 text-right font-bold text-white">{t.common.points}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/60">
@@ -330,10 +337,10 @@ function PastTournamentDetailsModal({
           <div className="mt-6">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-2.5 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <History className="w-4 h-4 text-gray-300" /> Spilte kamper ({(tournament.matches || []).length})
+                <History className="w-4 h-4 text-gray-300" /> {isEnglish ? 'Played matches' : 'Spilte kamper'} ({(tournament.matches || []).length})
               </span>
               <span className="text-[10px] text-gray-500">
-                Kan korrigeres samme dag
+                {isEnglish ? 'Can be corrected same day' : 'Kan korrigeres samme dag'}
               </span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1">
@@ -346,7 +353,7 @@ function PastTournamentDetailsModal({
                 return (
                   <div key={m.id} className="p-3 bg-gray-900/60 rounded-xl border border-gray-800 flex flex-col justify-between gap-2 text-xs">
                     <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono">
-                      <span>Kamp #{idx + 1} {m.courtNumber ? `(Bane ${m.courtNumber})` : ''}</span>
+                      <span>{isEnglish ? 'Match' : 'Kamp'} #{idx + 1} {m.courtNumber ? `(${t.common.court} ${m.courtNumber})` : ''}</span>
                       <span>{startTime} - {endTime} ({duration})</span>
                     </div>
 
@@ -379,7 +386,7 @@ function PastTournamentDetailsModal({
                         })}
                         className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 font-bold"
                       >
-                        <Share2 className="w-3 h-3 text-[#BFFF00]" /> Del kamp
+                        <Share2 className="w-3 h-3 text-[#BFFF00]" /> {isEnglish ? 'Share match' : 'Del kamp'}
                       </button>
 
                       {canEdit && (
@@ -388,7 +395,7 @@ function PastTournamentDetailsModal({
                           onClick={() => setEditingMatch(m)}
                           className="text-[10px] text-[#BFFF00] hover:underline flex items-center gap-1 font-bold"
                         >
-                          <Edit3 className="w-3 h-3" /> Korriger
+                          <Edit3 className="w-3 h-3" /> {t.tournamentView.editScore}
                         </button>
                       )}
                     </div>
@@ -408,7 +415,6 @@ function PastTournamentDetailsModal({
         />
       )}
 
-      
       {/* Result Card Modal */}
       {resultCardData && (
         <ResultCardModal

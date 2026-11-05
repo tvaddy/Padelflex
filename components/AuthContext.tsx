@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { KeyRound, Eye, EyeOff, ShieldCheck, ArrowRight, UserCheck, X, RefreshCw, Layers, ShieldAlert, Sparkles, Hash, Zap } from 'lucide-react';
 import PadelLogo from './PadelLogo';
+import { useTranslation } from '@/lib/i18n';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -23,8 +24,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SAVED_PROFILES_KEY = 'padelflex_saved_profiles';
 const AUTH_TOKEN_KEY = 'padelflex_auth_token';
 const ACCESS_CODE_KEY = 'padelflex_access_code';
+const SHOW_TEST_BUTTON = process.env.NEXT_PUBLIC_ENABLE_TEST_PROFILE === 'true' || process.env.NEXT_PUBLIC_SHOW_TEST_BUTTON === 'true';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ 
+  children,
+  enableTestProfile 
+}: { 
+  children: React.ReactNode;
+  enableTestProfile?: boolean;
+}) {
+  const isTestEnabled = enableTestProfile !== undefined 
+    ? enableTestProfile 
+    : SHOW_TEST_BUTTON;
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [token, setToken] = useState<string | null>(null);
@@ -37,15 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            if (!parsed.includes('test')) {
+            if (isTestEnabled && !parsed.includes('test')) {
               return ['test', ...parsed];
+            }
+            if (!isTestEnabled && parsed.includes('test')) {
+              return parsed.filter(p => p !== 'test');
             }
             return parsed;
           }
         }
       } catch (e) {}
     }
-    return ['test'];
+    return isTestEnabled ? ['test'] : [];
   });
 
   // Load saved profiles and check current token
@@ -177,7 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <LoginScreen 
         onLogin={login} 
         savedProfiles={savedProfiles} 
-        onRemoveProfile={removeSavedProfile} 
+        onRemoveProfile={removeSavedProfile}
+        isTestEnabled={isTestEnabled}
       />
     );
   }
@@ -213,9 +229,11 @@ type LoginScreenProps = {
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
   savedProfiles: string[];
   onRemoveProfile: (code: string) => void;
+  isTestEnabled: boolean;
 };
 
-function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenProps) {
+function LoginScreen({ onLogin, savedProfiles, onRemoveProfile, isTestEnabled }: LoginScreenProps) {
+  const { t, locale, toggleLocale } = useTranslation();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -230,7 +248,7 @@ function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenPro
     setIsSubmitting(false);
 
     if (!res.success) {
-      setError(res.error || 'Ugyldig tilgangskode. Vennligst prøv igjen.');
+      setError(res.error || t.auth.invalidCode);
     }
   };
 
@@ -241,13 +259,27 @@ function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenPro
     const res = await onLogin(saved);
     setIsSubmitting(false);
     if (!res.success) {
-      setError(res.error || 'Kunne ikke åpne profil.');
+      setError(res.error || t.auth.invalidCode);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden w-full">
       <div className="w-full max-w-md bg-gradient-to-b from-[#161616] to-[#101010] p-6 sm:p-8 rounded-3xl border border-gray-800 shadow-2xl space-y-5">
+        {/* Top bar with language switcher */}
+        <div className="flex justify-end -mt-1 -mr-1">
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-900/90 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 rounded-xl text-xs font-mono font-bold transition cursor-pointer"
+            title="Switch Language / Bytt språk"
+          >
+            <span className={locale === 'no' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>NO</span>
+            <span className="text-gray-600">/</span>
+            <span className={locale === 'en' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>EN</span>
+          </button>
+        </div>
+
         {/* Header with App Logo */}
         <div className="text-center space-y-2">
           <div className="flex justify-center pb-1">
@@ -257,64 +289,68 @@ function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenPro
             PADEL<span className="text-[#BFFF00]">FLEX</span>
           </h1>
           <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
-            Fleksibel organisering av Americano, Mexicano og ligaturneringer for padel.
+            {t.common.tagline}
           </p>
         </div>
 
-        {/* Standard Test-profil Hurtigknapp */}
-        <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-[#BFFF00]" /> Standard profil
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#BFFF00]/20 text-[#BFFF00] font-mono font-bold tracking-wide">
-              Klar til bruk
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleSelectSaved('test')}
-            disabled={isSubmitting}
-            id="login-test-profile-button"
-            className="w-full group bg-gradient-to-r from-[#172412] via-[#131d10] to-[#0f160c] hover:from-[#1e3017] hover:to-[#172413] border-2 border-[#BFFF00]/50 hover:border-[#BFFF00] p-4 rounded-2xl flex items-center justify-between transition-all duration-200 shadow-[0_4px_20px_rgba(191,255,0,0.12)] hover:shadow-[0_4px_25px_rgba(191,255,0,0.22)] text-left active:scale-[0.98]"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#BFFF00] text-black flex items-center justify-center font-black group-hover:scale-105 transition shadow-sm">
-                <Zap className="w-5 h-5 fill-black text-black" />
+        {/* Standard Test Profile Button (Controlled by runtime enableTestProfile) */}
+        {isTestEnabled && (
+          <>
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-[#BFFF00]" /> {t.auth.standardProfile}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#BFFF00]/20 text-[#BFFF00] font-mono font-bold tracking-wide">
+                  {t.auth.readyToUse}
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-white group-hover:text-[#BFFF00] transition">
-                    Prøv med «test»-profil
-                  </span>
+
+              <button
+                type="button"
+                onClick={() => handleSelectSaved('test')}
+                disabled={isSubmitting}
+                id="login-test-profile-button"
+                className="w-full group bg-gradient-to-r from-[#172412] via-[#131d10] to-[#0f160c] hover:from-[#1e3017] hover:to-[#172413] border-2 border-[#BFFF00]/50 hover:border-[#BFFF00] p-4 rounded-2xl flex items-center justify-between transition-all duration-200 shadow-[0_4px_20px_rgba(191,255,0,0.12)] hover:shadow-[0_4px_25px_rgba(191,255,0,0.22)] text-left active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#BFFF00] text-black flex items-center justify-center font-black group-hover:scale-105 transition shadow-sm">
+                    <Zap className="w-5 h-5 fill-black text-black" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-white group-hover:text-[#BFFF00] transition">
+                        {t.auth.tryTestProfile}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-300">
+                      {t.auth.testProfileDesc}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-300">
-                  Inkluderer testspillere – test alt umiddelbart
-                </p>
-              </div>
+                <div className="w-8 h-8 rounded-lg bg-black/40 border border-gray-700/50 flex items-center justify-center text-gray-300 group-hover:text-[#BFFF00] group-hover:border-[#BFFF00]/50 transition shrink-0">
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
+                </div>
+              </button>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-black/40 border border-gray-700/50 flex items-center justify-center text-gray-300 group-hover:text-[#BFFF00] group-hover:border-[#BFFF00]/50 transition shrink-0">
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
-            </div>
-          </button>
-        </div>
 
-        {/* Divider */}
-        <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-gray-800"></div>
-          <span className="flex-shrink mx-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
-            eller oppgi tilgangskode / admin
-          </span>
-          <div className="flex-grow border-t border-gray-800"></div>
-        </div>
+            {/* Divider */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-gray-800"></div>
+              <span className="flex-shrink mx-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+                {t.auth.orCustom}
+              </span>
+              <div className="flex-grow border-t border-gray-800"></div>
+            </div>
+          </>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Hash className="w-3.5 h-3.5 text-[#BFFF00]" /> Egendefinert kode / Admin
+                <Hash className="w-3.5 h-3.5 text-[#BFFF00]" /> {t.auth.inputLabel}
               </span>
             </label>
             <div className="relative">
@@ -325,7 +361,7 @@ function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenPro
                   setCode(e.target.value);
                   setError(null);
                 }}
-                placeholder="Skriv tilgangskode (f.eks. padelgjengen)..."
+                placeholder={t.auth.placeholder}
                 required
                 className="w-full bg-black/80 border border-gray-700 focus:border-[#BFFF00] text-white px-4 py-3 rounded-xl text-sm focus:outline-none transition font-medium"
               />
@@ -346,22 +382,22 @@ function LoginScreen({ onLogin, savedProfiles, onRemoveProfile }: LoginScreenPro
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Åpner profil...
+                {t.common.loading}
               </span>
             ) : (
               <>
-                <span>Åpne oppgitt kode</span>
+                <span>{t.auth.loginButton}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </>
             )}
           </button>
         </form>
 
-        {/* Tidligere brukte profiler (hvis finnes) */}
+        {/* Recent Saved Profiles */}
         {savedProfiles.length > 0 && (
           <div className="pt-3 border-t border-gray-800/80 space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">
-              Tilgjengelige / tidligere profiler:
+              {t.auth.savedProfiles}
             </span>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
               {savedProfiles.map((prof) => (

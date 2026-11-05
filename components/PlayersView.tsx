@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { addPlayer, updatePlayerName, deletePlayer, resetTestProfileData } from '@/app/actions';
 import { useAuth } from './AuthContext';
+import { useTranslation } from '@/lib/i18n';
 import PlayerCareerModal from './PlayerCareerModal';
 
 type PlayersViewProps = {
@@ -27,6 +28,7 @@ type PlayersViewProps = {
 
 export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
   const { accessCode } = useAuth();
+  const { t, isEnglish } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
@@ -43,11 +45,12 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
     startTransition(async () => {
       try {
         await addPlayer(newPlayerName.trim());
+        const addedName = newPlayerName.trim();
         setNewPlayerName('');
-        setStatusMessage(`Spiller "${newPlayerName.trim()}" ble lagt til!`);
+        setStatusMessage(isEnglish ? `Player "${addedName}" was added!` : `Spiller "${addedName}" ble lagt til!`);
         setTimeout(() => setStatusMessage(null), 3000);
       } catch (err: any) {
-        setStatusMessage(err.message || 'Kunne ikke legge til spiller');
+        setStatusMessage(err.message || (isEnglish ? 'Could not add player' : 'Kunne ikke legge til spiller'));
       }
     });
   };
@@ -64,30 +67,31 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
         await updatePlayerName(playerId, editNameValue.trim());
         setEditingPlayerId(null);
       } catch (err: any) {
-        setStatusMessage(err.message || 'Kunne ikke oppdatere navn');
+        setStatusMessage(err.message || (isEnglish ? 'Could not update name' : 'Kunne ikke oppdatere navn'));
       }
     });
   };
 
   const handleConfirmDelete = () => {
     if (!playerToDelete) return;
+    const deletedName = playerToDelete.name;
     startTransition(async () => {
       try {
         await deletePlayer(playerToDelete.id);
         setPlayerToDelete(null);
-        setStatusMessage(`Spiller "${playerToDelete.name}" ble fjernet.`);
+        setStatusMessage(isEnglish ? `Player "${deletedName}" was removed.` : `Spiller "${deletedName}" ble fjernet.`);
         setTimeout(() => setStatusMessage(null), 3000);
       } catch (err: any) {
-        setStatusMessage(err.message || 'Kunne ikke slette spiller');
+        setStatusMessage(err.message || (isEnglish ? 'Could not delete player' : 'Kunne ikke slette spiller'));
       }
     });
   };
 
   const handleResetTestData = () => {
-    if (!confirm('Vil du laste inn / gjenopprette standard testoppsett med 8 spillere, liga og kamper?')) return;
+    if (!confirm(isEnglish ? 'Do you want to load/restore standard test setup with 8 players, league, and matches?' : 'Vil du laste inn / gjenopprette standard testoppsett med 8 spillere, liga og kamper?')) return;
     startTransition(async () => {
       await resetTestProfileData();
-      setStatusMessage('Testoppsettet ble gjenopprettet!');
+      setStatusMessage(isEnglish ? 'Test setup was restored!' : 'Testoppsettet ble gjenopprettet!');
       setTimeout(() => setStatusMessage(null), 3500);
     });
   };
@@ -104,15 +108,15 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#BFFF00]/15 border border-[#BFFF00]/30 text-[#BFFF00] rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-              Spilleroversikt
+              {isEnglish ? 'Player Overview' : 'Spilleroversikt'}
             </span>
             <span className="text-xs text-gray-400 font-mono">
-              {allPlayers.length} {allPlayers.length === 1 ? 'spiller' : 'spillere'} registrert
+              {allPlayers.length} {allPlayers.length === 1 ? (isEnglish ? 'player' : 'spiller') : (isEnglish ? 'players' : 'spillere')} {isEnglish ? 'registered' : 'registrert'}
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">Spillere</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">{t.common.players}</h2>
           <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
-            Administrer spillere, se personlig karrierestatistikk, formkurver, drømmemakker og Elo-ranking.
+            {t.players.subtitle}
           </p>
         </div>
 
@@ -124,10 +128,10 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
               onClick={handleResetTestData}
               disabled={isPending}
               className="px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-[#BFFF00]/40 text-xs font-bold text-gray-300 hover:text-white transition flex items-center gap-1.5 shadow-sm active:scale-95"
-              title="Gjenopprett testoppsett med eksempelspillere og kamper"
+              title={isEnglish ? 'Restore test setup with sample players and matches' : 'Gjenopprett testoppsett med eksempelspillere og kamper'}
             >
               <RotateCcw className="w-3.5 h-3.5 text-[#BFFF00]" />
-              <span>{allPlayers.length === 0 ? 'Last inn testoppsett' : 'Gjenopprett testoppsett'}</span>
+              <span>{allPlayers.length === 0 ? (isEnglish ? 'Load test setup' : 'Last inn testoppsett') : (isEnglish ? 'Restore test setup' : 'Gjenopprett testoppsett')}</span>
             </button>
           )}
         </div>
@@ -150,17 +154,17 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
               <div className="w-6 h-6 rounded-lg bg-[#BFFF00]/20 text-[#BFFF00] flex items-center justify-center font-black text-xs">
                 +
               </div>
-              <span>Legg til ny spiller</span>
+              <span>{isEnglish ? 'Add new player' : 'Legg til ny spiller'}</span>
             </h3>
             <span className="text-[11px] text-gray-500 font-medium">
-              Tilgjengelig for ordinær kamp og turnering
+              {isEnglish ? 'Available for matches and tournaments' : 'Tilgjengelig for ordinær kamp og turnering'}
             </span>
           </div>
 
           <form onSubmit={handleAddPlayer} className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
-              placeholder="Fullt navn eller kallenavn (f.eks. Alexander, Thomas)..."
+              placeholder={isEnglish ? 'Full name or nickname (e.g. Alexander, Thomas)...' : 'Fullt navn eller kallenavn (f.eks. Alexander, Thomas)...'}
               value={newPlayerName}
               onChange={(e) => setNewPlayerName(e.target.value)}
               className="flex-1 bg-black border border-gray-700/80 text-white rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#BFFF00] placeholder-gray-500"
@@ -171,7 +175,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
               className="bg-[#BFFF00] text-black px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 hover:bg-[#b0eb00] transition active:scale-95 disabled:opacity-40 shadow-[0_0_15px_rgba(191,255,0,0.2)] shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span>Legg til spiller</span>
+              <span>{t.players.addPlayer}</span>
             </button>
           </form>
         </div>
@@ -180,12 +184,12 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
         <div className="bg-[#141414] p-4 sm:p-5 rounded-3xl border border-gray-800/90 shadow-xl flex flex-col justify-center space-y-2">
           <label className="text-xs font-extrabold text-gray-300 flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-[#BFFF00]" />
-            <span>Søk i spillere</span>
+            <span>{isEnglish ? 'Search players' : 'Søk i spillere'}</span>
           </label>
           <div className="relative">
             <input
               type="text"
-              placeholder="Søk etter navn..."
+              placeholder={isEnglish ? 'Search by name...' : 'Søk etter navn...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-black border border-gray-700/80 text-white rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#BFFF00] placeholder-gray-500"
@@ -211,12 +215,12 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
             <Users className="w-6 h-6" />
           </div>
           <h3 className="text-base font-extrabold text-white">
-            {searchQuery ? `Ingen spillere matcher "${searchQuery}"` : 'Ingen spillere registrert ennå'}
+            {searchQuery ? (isEnglish ? `No players match "${searchQuery}"` : `Ingen spillere matcher "${searchQuery}"`) : (isEnglish ? 'No players registered yet' : 'Ingen spillere registrert ennå')}
           </h3>
           <p className="text-xs text-gray-400 max-w-md mx-auto">
             {searchQuery
-              ? 'Prøv et annet søkeord eller fjern søkefilteret.'
-              : 'Legg til spillere ovenfor, eller klikk på knappen under for å laste inn et komplett testoppsett med 8 spillere.'}
+              ? (isEnglish ? 'Try a different search term or clear the filter.' : 'Prøv et annet søkeord eller fjern søkefilteret.')
+              : (isEnglish ? 'Add players above, or click below to load a complete test setup with 8 players.' : 'Legg til spillere ovenfor, eller klikk på knappen under for å laste inn et komplett testoppsett med 8 spillere.')}
           </p>
           {!searchQuery && (
             <button
@@ -226,7 +230,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
               className="mt-2 px-5 py-2.5 bg-[#BFFF00] text-black font-extrabold text-xs rounded-xl hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_15px_rgba(191,255,0,0.25)] inline-flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Last inn testoppsett (8 spillere)</span>
+              <span>{isEnglish ? 'Load test setup (8 players)' : 'Last inn testoppsett (8 spillere)'}</span>
             </button>
           )}
         </div>
@@ -261,7 +265,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                           onClick={() => handleSaveEdit(player.id)}
                           disabled={isPending || !editNameValue.trim()}
                           className="p-1.5 bg-[#BFFF00] text-black rounded-lg hover:bg-[#b0eb00] transition shrink-0"
-                          title="Lagre navn"
+                          title={isEnglish ? 'Save name' : 'Lagre navn'}
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
@@ -269,7 +273,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                           type="button"
                           onClick={() => setEditingPlayerId(null)}
                           className="p-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg transition shrink-0"
-                          title="Avbryt"
+                          title={t.common.cancel}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -290,7 +294,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                             </h4>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-[10px] font-mono font-bold text-[#BFFF00] bg-black/50 px-1.5 py-0.5 rounded border border-gray-800">
-                                Totalrating {elo}
+                                {isEnglish ? 'Rating' : 'Totalrating'} {elo}
                               </span>
                             </div>
                           </div>
@@ -301,7 +305,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                           <button
                             type="button"
                             onClick={() => handleStartEdit(player)}
-                            title="Endre navn"
+                            title={isEnglish ? 'Edit name' : 'Endre navn'}
                             className="p-1.5 text-gray-500 hover:text-[#BFFF00] hover:bg-gray-800 rounded-lg transition"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -309,7 +313,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                           <button
                             type="button"
                             onClick={() => setPlayerToDelete(player)}
-                            title="Slett spiller"
+                            title={isEnglish ? 'Delete player' : 'Slett spiller'}
                             className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -328,7 +332,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                         </span>
                       ))
                     ) : (
-                      <span className="text-[10px] text-gray-500">Ingen ligaer</span>
+                      <span className="text-[10px] text-gray-500">{isEnglish ? 'No leagues' : 'Ingen ligaer'}</span>
                     )}
                   </div>
                 </div>
@@ -340,7 +344,7 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                   className="mt-3 w-full py-1.5 px-2 bg-gray-900/60 hover:bg-[#BFFF00]/10 border border-gray-800/80 hover:border-[#BFFF00]/30 rounded-xl text-[11px] font-bold text-gray-400 hover:text-[#BFFF00] transition flex items-center justify-center gap-1 group/btn"
                 >
                   <Activity className="w-3 h-3 text-[#BFFF00]" />
-                  <span>Se karrierestatistikk</span>
+                  <span>{t.players.careerStats}</span>
                 </button>
               </div>
             );
@@ -354,10 +358,12 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
           <div className="bg-[#141414] border border-gray-800 p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3 text-red-400">
               <AlertCircle className="w-6 h-6 shrink-0" />
-              <h3 className="font-extrabold text-base text-white">Slett {playerToDelete.name}?</h3>
+              <h3 className="font-extrabold text-base text-white">{isEnglish ? `Delete ${playerToDelete.name}?` : `Slett ${playerToDelete.name}?`}</h3>
             </div>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Spilleren vil fjernes fra fremtidige kamper og turneringer. Historiske kampresultater forblir lagret.
+              {isEnglish 
+                ? 'The player will be removed from future matches and tournaments. Historical match results remain saved.'
+                : 'Spilleren vil fjernes fra fremtidige kamper og turneringer. Historiske kampresultater forblir lagret.'}
             </p>
             <div className="flex gap-2 pt-2">
               <button
@@ -366,14 +372,14 @@ export default function PlayersView({ allPlayers, leagues }: PlayersViewProps) {
                 disabled={isPending}
                 className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition"
               >
-                {isPending ? 'Sletter...' : 'Slett'}
+                {isPending ? (isEnglish ? 'Deleting...' : 'Sletter...') : (isEnglish ? 'Delete' : 'Slett')}
               </button>
               <button
                 type="button"
                 onClick={() => setPlayerToDelete(null)}
                 className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-xs font-bold transition"
               >
-                Avbryt
+                {t.common.cancel}
               </button>
             </div>
           </div>

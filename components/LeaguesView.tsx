@@ -36,6 +36,7 @@ import {
   addPlayer
 } from '@/app/actions';
 import { useAuth } from './AuthContext';
+import { useTranslation } from '@/lib/i18n';
 
 
 type LeaguesViewProps = {
@@ -53,6 +54,7 @@ export default function LeaguesView({
   onStartTournamentForLeague
 }: LeaguesViewProps) {
   const { isAdmin } = useAuth();
+  const { t, isEnglish } = useTranslation();
   const [leagueFilter, setLeagueFilter] = useState<'active' | 'archived'>('active');
   const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(
     leagues.length > 0 ? leagues[0].id : null
@@ -131,7 +133,7 @@ export default function LeaguesView({
       if (sortCol === 'name') {
         const nameA = (a.user?.name || '').toLowerCase();
         const nameB = (b.user?.name || '').toLowerCase();
-        return sortDirection === 'asc' ? nameA.localeCompare(nameB, 'no') : nameB.localeCompare(nameA, 'no');
+        return sortDirection === 'asc' ? nameA.localeCompare(nameB, isEnglish ? 'en' : 'no') : nameB.localeCompare(nameA, isEnglish ? 'en' : 'no');
       }
 
       let valA = a[sortCol];
@@ -153,14 +155,14 @@ export default function LeaguesView({
     });
 
     return list;
-  }, [leaderboardList, sortCol, sortDirection]);
+  }, [leaderboardList, sortCol, sortDirection, isEnglish]);
 
   const handleArchiveToggle = () => {
     if (!selectedLeague) return;
     const isArchiving = !selectedLeague.isArchived;
     const msg = isArchiving
-      ? `Vil du avslutte og arkivere "${selectedLeague.name}"? Den flyttes til arkiv.`
-      : `Vil du gjenåpne "${selectedLeague.name}" som en aktiv liga?`;
+      ? isEnglish ? `Do you want to archive "${selectedLeague.name}"? It will be moved to the archive.` : `Vil du avslutte og arkivere "${selectedLeague.name}"? Den flyttes til arkiv.`
+      : isEnglish ? `Do you want to reopen "${selectedLeague.name}" as an active league?` : `Vil du gjenåpne "${selectedLeague.name}" som en aktiv liga?`;
 
     if (confirm(msg)) {
       startTransition(async () => {
@@ -175,14 +177,14 @@ export default function LeaguesView({
 
   const handleRenameLeague = () => {
     if (!selectedLeague) return;
-    const newName = prompt('Skriv inn nytt navn for ligaen:', selectedLeague.name);
+    const newName = prompt(isEnglish ? 'Enter new league name:' : 'Skriv inn nytt navn for ligaen:', selectedLeague.name);
     if (newName && newName.trim() !== '' && newName.trim() !== selectedLeague.name) {
       startTransition(async () => {
         try {
           const { renameLeague } = await import('@/app/actions');
           await renameLeague(selectedLeague.id, newName);
         } catch (e: any) {
-          alert(e.message || 'Kunne ikke endre navn på liga.');
+          alert(e.message || (isEnglish ? 'Could not rename league.' : 'Kunne ikke endre navn på liga.'));
         }
       });
     }
@@ -196,7 +198,7 @@ export default function LeaguesView({
           const { updateLeagueTargetScore } = await import('@/app/actions');
           await updateLeagueTargetScore(selectedLeague.id, newScore);
         } catch (e: any) {
-          alert(e.message || 'Kunne ikke endre målscore.');
+          alert(e.message || (isEnglish ? 'Could not change target score.' : 'Kunne ikke endre målscore.'));
         }
       });
     }
@@ -204,11 +206,11 @@ export default function LeaguesView({
 
   const handleDeleteLeague = () => {
     if (!selectedLeague) return;
-    if (confirm(`Er du sikker på at du vil slette ligaen "${selectedLeague.name}" og alle tilhørende runder/kamper? Dette kan ikke angres.`)) {
+    if (confirm(isEnglish ? `Are you sure you want to delete league "${selectedLeague.name}" and all associated rounds/matches? This cannot be undone.` : `Er du sikker på at du vil slette ligaen "${selectedLeague.name}" og alle tilhørende runder/kamper? Dette kan ikke angres.`)) {
       startTransition(async () => {
         const res = await deleteLeague(selectedLeague.id);
         if (res && !res.success) {
-          alert(res.error || 'Kunne ikke slette liga');
+          alert(res.error || (isEnglish ? 'Could not delete league' : 'Kunne ikke slette liga'));
         } else {
           const remaining = leagues.filter(l => l.id !== selectedLeague.id);
           const next = remaining.find(l => !l.isArchived) || remaining[0];
@@ -234,15 +236,15 @@ export default function LeaguesView({
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00] rounded-full text-xs font-extrabold uppercase tracking-wider">
-              Ligaer
+              {t.leagues.title}
             </span>
             <span className="text-xs text-gray-500 font-mono">
-              {leagues.filter(l => !l.isArchived).length} aktive • {leagues.filter(l => l.isArchived).length} arkiverte
+              {leagues.filter(l => !l.isArchived).length} {isEnglish ? 'active' : 'aktive'} • {leagues.filter(l => l.isArchived).length} {isEnglish ? 'archived' : 'arkiverte'}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">Ligaoversikt</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">{t.leagues.title}</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Administrer ligaer, faste spillere og følg sammenlagttabeller over flere runder.
+            {t.leagues.subtitle}
           </p>
         </div>
 
@@ -260,7 +262,7 @@ export default function LeaguesView({
                 leagueFilter === 'active' ? 'bg-gray-800 text-white font-extrabold' : 'text-gray-400 hover:text-white'
               }`}
             >
-              Aktive
+              {t.common.active}
             </button>
             <button
               type="button"
@@ -273,7 +275,7 @@ export default function LeaguesView({
                 leagueFilter === 'archived' ? 'bg-gray-800 text-white font-extrabold' : 'text-gray-400 hover:text-white'
               }`}
             >
-              Arkiverte
+              {t.common.archived}
             </button>
           </div>
 
@@ -283,7 +285,7 @@ export default function LeaguesView({
             className="w-full xs:w-auto bg-[#BFFF00] text-black px-4 sm:px-5 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_20px_rgba(191,255,0,0.25)] shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Ny liga</span>
+            <span>{t.leagues.createLeague}</span>
           </button>
         </div>
       </div>
@@ -292,12 +294,18 @@ export default function LeaguesView({
         <div className="p-10 sm:p-12 text-center bg-gray-900/40 border border-gray-800 border-dashed rounded-3xl">
           <Trophy className="w-14 h-14 text-gray-700 mx-auto mb-3" />
           <h3 className="text-lg sm:text-xl font-bold text-gray-200">
-            {leagueFilter === 'active' ? 'Ingen aktive ligaer funnet' : 'Ingen arkiverte ligaer funnet'}
+            {leagueFilter === 'active' 
+              ? (isEnglish ? 'No active leagues found' : 'Ingen aktive ligaer funnet')
+              : (isEnglish ? 'No archived leagues found' : 'Ingen arkiverte ligaer funnet')}
           </h3>
           <p className="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mt-1">
             {leagueFilter === 'active'
-              ? 'Opprett en liga for å samle faste spillere og føre kontinuerlig tabell over flere runder.'
-              : 'Avsluttede ligaer havner her i arkivet.'}
+              ? (isEnglish 
+                  ? 'Create a league to gather regular players and track persistent standings across rounds.' 
+                  : 'Opprett en liga for å samle faste spillere og føre kontinuerlig tabell over flere runder.')
+              : (isEnglish 
+                  ? 'Finished or archived leagues will appear here.' 
+                  : 'Avsluttede ligaer havner her i arkivet.')}
           </p>
           {leagueFilter === 'active' && (
             <button
@@ -305,7 +313,7 @@ export default function LeaguesView({
               onClick={() => setIsCreateLeagueModalOpen(true)}
               className="mt-5 bg-[#BFFF00] text-black px-6 py-2.5 rounded-2xl font-bold text-xs sm:text-sm inline-flex items-center gap-2 shadow-lg"
             >
-              <Plus className="w-4 h-4" /> Ny liga
+              <Plus className="w-4 h-4" /> {t.leagues.createLeague}
             </button>
           )}
         </div>
@@ -314,7 +322,7 @@ export default function LeaguesView({
           {/* Sidebar / Ligavelger */}
           <div className="lg:col-span-1 space-y-2.5">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500 px-2 block">
-              {leagueFilter === 'active' ? 'Aktive Ligaer' : 'Arkiverte Ligaer'}
+              {leagueFilter === 'active' ? t.leagues.activeLeagues : t.leagues.archivedLeagues}
             </span>
             <div className="space-y-2">
               {filteredLeagues.map((league) => {
@@ -349,7 +357,7 @@ export default function LeaguesView({
                             {league.name}
                           </p>
                           <span className="text-[10px] text-gray-500 font-mono block">
-                            {memberCount} spillere • {tourneyCount} runder
+                            {memberCount} {isEnglish ? 'players' : 'spillere'} • {tourneyCount} {isEnglish ? 'rounds' : 'runder'}
                           </span>
                         </div>
                       </div>
@@ -373,10 +381,10 @@ export default function LeaguesView({
                         ? 'bg-amber-500/10 border border-amber-500/30 text-amber-300' 
                         : 'bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00]'
                     }`}>
-                      {selectedLeague.isArchived ? 'Arkivert' : 'Aktiv Liga'}
+                      {selectedLeague.isArchived ? t.common.archived : (isEnglish ? 'Active League' : 'Aktiv Liga')}
                     </span>
                     <span className="text-xs text-gray-500 font-mono">
-                      {selectedLeague.defaultTargetScore || 21}p standard målscore
+                      {selectedLeague.defaultTargetScore || 21}p {isEnglish ? 'default target score' : 'standard målscore'}
                     </span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">{selectedLeague.name}</h3>
@@ -393,7 +401,7 @@ export default function LeaguesView({
                       className="w-full sm:w-auto bg-[#BFFF00] text-black px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_15px_rgba(191,255,0,0.25)]"
                     >
                       <Play className="w-4 h-4 fill-current" />
-                      <span>Start runde</span>
+                      <span>{t.leagues.startRound}</span>
                     </button>
                   )}
 
@@ -403,7 +411,7 @@ export default function LeaguesView({
                     className="w-full sm:w-auto bg-gray-900 text-gray-300 hover:text-white px-3.5 py-2.5 rounded-xl text-xs font-bold border border-gray-800 hover:bg-gray-800 transition flex items-center justify-center gap-1.5"
                   >
                     <Settings className="w-3.5 h-3.5 text-gray-400" />
-                    <span>Innstillinger</span>
+                    <span>{isEnglish ? 'Settings' : 'Innstillinger'}</span>
                   </button>
                 </div>
               </div>
@@ -420,7 +428,7 @@ export default function LeaguesView({
                   }`}
                 >
                   <Trophy className="w-4 h-4 shrink-0" />
-                  <span>Tabell</span>
+                  <span>{t.leagues.leaderboard}</span>
                 </button>
 
                 <button
@@ -433,7 +441,7 @@ export default function LeaguesView({
                   }`}
                 >
                   <Calendar className="w-4 h-4 shrink-0" />
-                  <span>Runder ({selectedLeague.tournaments?.length || 0})</span>
+                  <span>{isEnglish ? `Rounds (${selectedLeague.tournaments?.length || 0})` : `Runder (${selectedLeague.tournaments?.length || 0})`}</span>
                 </button>
 
                 <button
@@ -446,7 +454,7 @@ export default function LeaguesView({
                   }`}
                 >
                   <Users className="w-4 h-4 shrink-0" />
-                  <span>Faste spillere ({selectedLeague.members?.length || 0})</span>
+                  <span>{isEnglish ? `Members (${selectedLeague.members?.length || 0})` : `Faste spillere (${selectedLeague.members?.length || 0})`}</span>
                 </button>
               </div>
 
@@ -457,7 +465,7 @@ export default function LeaguesView({
                   <div className="p-3.5 bg-gray-900/60 rounded-2xl border border-gray-800/80 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                       <Trophy className="w-4 h-4 text-[#BFFF00] shrink-0" />
-                      <span className="font-extrabold text-sm text-white">Ligarating</span>
+                      <span className="font-extrabold text-sm text-white">{t.leagues.eloRating}</span>
                     </div>
                     {leagueStatsData && leagueStatsData.leaderboard.length > 0 && (
                       <button
@@ -465,7 +473,7 @@ export default function LeaguesView({
                         onClick={() => setResultCardData({
                           type: 'league',
                           data: {
-                            name: `${selectedLeague.name} (Ligatabell)`,
+                            name: `${selectedLeague.name} (${isEnglish ? 'League Standings' : 'Ligatabell'})`,
                             participants: sortedLeaderboard.map((s: any) => ({
                               userId: s.userId,
                               user: s.user,
@@ -483,19 +491,23 @@ export default function LeaguesView({
                         className="px-3 py-1.5 bg-[#BFFF00]/10 hover:bg-[#BFFF00]/20 text-[#BFFF00] border border-[#BFFF00]/30 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition"
                       >
                         <Share2 className="w-3.5 h-3.5" />
-                        <span>Del resultat</span>
+                        <span>{isEnglish ? 'Share Result' : 'Del resultat'}</span>
                       </button>
                     )}
                   </div>
 
                   {isLoadingStats ? (
                     <div className="p-12 text-center text-gray-500 text-xs">
-                      Laster ligastatistikk...
+                      {t.common.loading}
                     </div>
                   ) : !leagueStatsData || leagueStatsData.leaderboard.length === 0 ? (
                     <div className="p-8 text-center bg-[#141414] border border-gray-800 rounded-3xl">
-                      <p className="text-gray-400 text-sm font-bold">Ingen kamper er registrert i denne ligaen ennå.</p>
-                      <p className="text-gray-600 text-xs mt-1">Start en runde for å bygge opp ligatabellen.</p>
+                      <p className="text-gray-400 text-sm font-bold">
+                        {isEnglish ? 'No matches recorded in this league yet.' : 'Ingen kamper er registrert i denne ligaen ennå.'}
+                      </p>
+                      <p className="text-gray-600 text-xs mt-1">
+                        {isEnglish ? 'Start a round to build up the league leaderboard.' : 'Start en runde for å bygge opp ligatabellen.'}
+                      </p>
                     </div>
                   ) : (
                     <div className="bg-[#141414] rounded-3xl border border-gray-800 overflow-hidden shadow-xl space-y-2">
@@ -503,17 +515,17 @@ export default function LeaguesView({
                       {/* Mobile Sorteringsvelger (Pills) */}
                       <div className="p-3 bg-gray-900/40 border-b border-gray-800/80 md:hidden space-y-1.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
-                          Sorter tabell etter:
+                          {isEnglish ? 'Sort table by:' : 'Sorter tabell etter:'}
                         </span>
                         <div className="flex flex-wrap gap-1">
                           {[
-                            { id: 'eloRating', label: 'Ligarating' },
-                            { id: 'avgPointPct', label: 'Gj.snitt Score %' },
-                            { id: 'winRatePct', label: 'Seier %' },
-                            { id: 'pointDiff', label: '+/- Diff' },
-                            { id: 'totalPoints', label: 'Poeng' },
-                            { id: 'matchesPlayed', label: 'Kamper' },
-                            { id: 'name', label: 'Navn' }
+                            { id: 'eloRating', label: t.leagues.eloRating },
+                            { id: 'avgPointPct', label: t.leagues.avgScorePct },
+                            { id: 'winRatePct', label: t.leagues.winRate },
+                            { id: 'pointDiff', label: '+/-' },
+                            { id: 'totalPoints', label: t.common.points },
+                            { id: 'matchesPlayed', label: t.common.matches },
+                            { id: 'name', label: isEnglish ? 'Name' : 'Navn' }
                           ].map((pill) => (
                             <button
                               key={pill.id}
@@ -558,7 +570,7 @@ export default function LeaguesView({
                                     {stat.user.name}
                                   </span>
                                   <span className="text-[10px] text-gray-400 font-mono">
-                                    {stat.matchesWon}V - {stat.matchesDrawn}U - {stat.matchesLost}T ({stat.totalPoints}p)
+                                    {stat.matchesWon}{isEnglish ? 'W' : 'V'} - {stat.matchesDrawn}{isEnglish ? 'D' : 'U'} - {stat.matchesLost}{isEnglish ? 'L' : 'T'} ({stat.totalPoints}p)
                                   </span>
                                 </div>
                               </div>
@@ -569,7 +581,7 @@ export default function LeaguesView({
                                     {stat.eloRating || 1500}
                                   </span>
                                   <span className="text-[9px] text-gray-400 block">
-                                    {stat.avgPointPct.toFixed(0)}% • {stat.winRatePct.toFixed(0)}%V
+                                    {stat.avgPointPct.toFixed(0)}% • {stat.winRatePct.toFixed(0)}%{isEnglish ? 'W' : 'V'}
                                   </span>
                                 </div>
                               </div>
@@ -588,35 +600,35 @@ export default function LeaguesView({
                                 onClick={() => handleHeaderClick('name')}
                                 className="px-4 py-3.5 cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>Spiller</span>
+                                <span>{t.tournamentView.player}</span>
                                 {renderSortIndicator('name')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('eloRating')}
                                 className="px-4 py-3.5 text-center font-extrabold text-[#BFFF00] cursor-pointer hover:text-[#b0eb00] transition select-none"
                               >
-                                <span>Ligarating</span>
+                                <span>{t.leagues.eloRating}</span>
                                 {renderSortIndicator('eloRating')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('avgPointPct')}
                                 className="px-4 py-3.5 text-center font-bold text-gray-200 cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>Gj.snitt Score %</span>
+                                <span>{t.leagues.avgScorePct}</span>
                                 {renderSortIndicator('avgPointPct')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('winRatePct')}
                                 className="px-4 py-3.5 text-center cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>Seier %</span>
+                                <span>{t.leagues.winRate}</span>
                                 {renderSortIndicator('winRatePct')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('matchesWon')}
                                 className="px-4 py-3.5 text-center cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>S / U / T</span>
+                                <span>{isEnglish ? 'W / D / L' : 'S / U / T'}</span>
                                 {renderSortIndicator('matchesWon')}
                               </th>
                               <th 
@@ -630,21 +642,21 @@ export default function LeaguesView({
                                 onClick={() => handleHeaderClick('totalPoints')}
                                 className="px-4 py-3.5 text-center font-bold text-white cursor-pointer hover:text-[#BFFF00] transition select-none"
                               >
-                                <span>Poeng</span>
+                                <span>{t.common.points}</span>
                                 {renderSortIndicator('totalPoints')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('matchesPlayed')}
                                 className="px-4 py-3.5 text-center text-gray-400 cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>Kamper</span>
+                                <span>{t.common.matches}</span>
                                 {renderSortIndicator('matchesPlayed')}
                               </th>
                               <th 
                                 onClick={() => handleHeaderClick('tournamentsPlayed')}
                                 className="px-4 py-3.5 text-center text-gray-400 cursor-pointer hover:text-white transition select-none"
                               >
-                                <span>Runder</span>
+                                <span>{isEnglish ? 'Rounds' : 'Runder'}</span>
                                 {renderSortIndicator('tournamentsPlayed')}
                               </th>
                             </tr>
@@ -675,7 +687,7 @@ export default function LeaguesView({
                                       </span>
                                       {stat.isMember && (
                                         <span className="px-1.5 py-0.2 bg-gray-800 text-gray-400 text-[9px] font-bold rounded">
-                                          Fast
+                                          {isEnglish ? 'Member' : 'Fast'}
                                         </span>
                                       )}
                                     </div>
@@ -734,14 +746,16 @@ export default function LeaguesView({
                   {(selectedLeague.tournaments || []).length === 0 ? (
                     <div className="p-8 text-center bg-[#141414] border border-gray-800 rounded-3xl">
                       <Calendar className="w-10 h-10 text-gray-700 mx-auto mb-2" />
-                      <p className="text-gray-400 text-sm font-bold">Ingen runder er spilt i denne ligaen ennå.</p>
+                      <p className="text-gray-400 text-sm font-bold">
+                        {isEnglish ? 'No rounds have been played in this league yet.' : 'Ingen runder er spilt i denne ligaen ennå.'}
+                      </p>
                       {!selectedLeague.isArchived && (
                         <button
                           type="button"
                           onClick={() => onStartTournamentForLeague(selectedLeague)}
                           className="mt-4 bg-[#BFFF00] text-black px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
                         >
-                          <Play className="w-3.5 h-3.5 fill-current" /> Start runde
+                          <Play className="w-3.5 h-3.5 fill-current" /> {t.leagues.startRound}
                         </button>
                       )}
                     </div>
@@ -749,7 +763,7 @@ export default function LeaguesView({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {selectedLeague.tournaments.map((tourney: any) => {
                         const winner = tourney.participants && tourney.participants[0];
-                        const dateStr = new Date(tourney.createdAt).toLocaleDateString('no-NB', {
+                        const dateStr = new Date(tourney.createdAt).toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric'
@@ -770,13 +784,13 @@ export default function LeaguesView({
                                   ? 'bg-green-500/20 text-green-400 border border-green-500/40' 
                                   : 'bg-gray-800 text-gray-400'
                               }`}>
-                                {tourney.isActive ? 'Pågår nå' : 'Fullført'}
+                                {tourney.isActive ? (isEnglish ? 'In Progress' : 'Pågår nå') : t.common.completed}
                               </span>
                             </div>
 
                             <div className="flex items-center justify-between text-xs pt-3 border-t border-gray-800/80">
                               <span className="text-gray-400">
-                                {tourney.participants?.length || 0} spillere • {tourney.matches?.length || 0} kamper
+                                {tourney.participants?.length || 0} {isEnglish ? 'players' : 'spillere'} • {tourney.matches?.length || 0} {isEnglish ? 'matches' : 'kamper'}
                               </span>
                               {winner && !tourney.isActive && (
                                 <span className="text-[#BFFF00] font-bold flex items-center gap-1">
@@ -797,15 +811,21 @@ export default function LeaguesView({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-white">Faste ligamedlemmer</h4>
-                      <p className="text-xs text-gray-500">Disse forhåndsvelges automatisk når du starter en runde i ligaen.</p>
+                      <h4 className="text-sm font-bold text-white">
+                        {isEnglish ? 'League Members' : 'Faste ligamedlemmer'}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {isEnglish 
+                          ? 'These are preselected automatically when starting a round in this league.' 
+                          : 'Disse forhåndsvelges automatisk når du starter en runde i ligaen.'}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsManageMembersModalOpen(true)}
                       className="bg-gray-900 hover:bg-gray-800 text-[#BFFF00] border border-gray-800 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
                     >
-                      <UserPlus className="w-3.5 h-3.5" /> Endre faste
+                      <UserPlus className="w-3.5 h-3.5" /> {isEnglish ? 'Edit Members' : 'Endre faste'}
                     </button>
                   </div>
 
@@ -818,7 +838,9 @@ export default function LeaguesView({
                           </div>
                           <div>
                             <p className="text-xs sm:text-sm font-bold text-white">{m.user.name}</p>
-                            <span className="text-[10px] text-gray-500">Fast medlem</span>
+                            <span className="text-[10px] text-gray-500">
+                              {isEnglish ? 'Member' : 'Fast medlem'}
+                            </span>
                           </div>
                         </div>
                         <button
@@ -829,7 +851,7 @@ export default function LeaguesView({
                             });
                           }}
                           disabled={isPending}
-                          title="Fjern fra faste medlemmer"
+                          title={isEnglish ? 'Remove from league members' : 'Fjern fra faste medlemmer'}
                           className="text-gray-600 hover:text-red-400 p-1.5 transition"
                         >
                           <UserMinus className="w-4 h-4" />
@@ -878,7 +900,9 @@ export default function LeaguesView({
             </button>
 
             <div className="mb-5 border-b border-gray-800/80 pb-3">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">Innstillinger</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
+                {isEnglish ? 'Settings' : 'Innstillinger'}
+              </span>
               <h3 className="text-lg sm:text-xl font-extrabold text-white mt-0.5">{selectedLeague.name}</h3>
             </div>
 
@@ -894,7 +918,7 @@ export default function LeaguesView({
               >
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-gray-400" />
-                  <span>Faste spillere ({selectedLeague.members?.length || 0})</span>
+                  <span>{isEnglish ? `Members (${selectedLeague.members?.length || 0})` : `Faste spillere (${selectedLeague.members?.length || 0})`}</span>
                 </div>
                 <Settings className="w-3.5 h-3.5 text-gray-500" />
               </button>
@@ -911,13 +935,15 @@ export default function LeaguesView({
               >
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-gray-400" />
-                  <span>Endre liganavn</span>
+                  <span>{isEnglish ? 'Rename league' : 'Endre liganavn'}</span>
                 </div>
               </button>
 
               {/* Endre målscore */}
               <div className="bg-gray-900/50 p-3 rounded-xl border border-gray-800 space-y-2">
-                <label className="text-[11px] font-bold text-gray-400 block px-1">Endre standard målscore</label>
+                <label className="text-[11px] font-bold text-gray-400 block px-1">
+                  {isEnglish ? 'Change default target score' : 'Endre standard målscore'}
+                </label>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[16, 21, 24, 32].map((pts) => (
                     <button
@@ -956,11 +982,11 @@ export default function LeaguesView({
                 >
                   {selectedLeague.isArchived ? (
                     <>
-                      <RotateCcw className="w-4 h-4" /> <span>Gjenåpne liga</span>
+                      <RotateCcw className="w-4 h-4" /> <span>{isEnglish ? 'Reopen league' : 'Gjenåpne liga'}</span>
                     </>
                   ) : (
                     <>
-                      <Archive className="w-4 h-4" /> <span>Arkiver liga</span>
+                      <Archive className="w-4 h-4" /> <span>{isEnglish ? 'Archive league' : 'Arkiver liga'}</span>
                     </>
                   )}
                 </button>
@@ -977,7 +1003,7 @@ export default function LeaguesView({
                     className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 mt-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>Slett liga permanent</span>
+                    <span>{isEnglish ? 'Delete league permanently' : 'Slett liga permanent'}</span>
                   </button>
                 )}
               </div>
@@ -1009,6 +1035,7 @@ function CreateLeagueModal({
   allPlayers: any[];
   onCreated: (league: any) => void;
 }) {
+  const { isEnglish } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [defaultTargetScore, setDefaultTargetScore] = useState<number>(21);
@@ -1040,17 +1067,27 @@ function CreateLeagueModal({
         </button>
 
         <div className="mb-4">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">Ny Liga</span>
-          <h3 className="text-lg sm:text-xl font-extrabold text-white mt-0.5">Opprett ny liga</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Samle turneringer og før tabell for en fast gjeng eller sesong.</p>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
+            {isEnglish ? 'New League' : 'Ny Liga'}
+          </span>
+          <h3 className="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+            {isEnglish ? 'Create New League' : 'Opprett ny liga'}
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {isEnglish 
+              ? 'Group tournaments and track persistent standings for a regular group or season.' 
+              : 'Samle turneringer og før tabell for en fast gjeng eller sesong.'}
+          </p>
         </div>
 
         <div className="space-y-3.5">
           <div>
-            <label className="text-[11px] font-bold text-gray-300 block mb-1">Liganavn</label>
+            <label className="text-[11px] font-bold text-gray-300 block mb-1">
+              {isEnglish ? 'League Name' : 'Liganavn'}
+            </label>
             <input
               type="text"
-              placeholder="f.eks. Mandagspadel, Vinterliga 2026, Bedriftsserien"
+              placeholder={isEnglish ? 'e.g. Monday Padel, Winter League 2026' : 'f.eks. Mandagspadel, Vinterliga 2026, Bedriftsserien'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-[#BFFF00]"
@@ -1059,7 +1096,9 @@ function CreateLeagueModal({
           </div>
 
           <div>
-            <label className="text-[11px] font-bold text-gray-300 block mb-1">Standard målscore per kamp</label>
+            <label className="text-[11px] font-bold text-gray-300 block mb-1">
+              {isEnglish ? 'Default target score per match' : 'Standard målscore per kamp'}
+            </label>
             <div className="grid grid-cols-4 gap-1 bg-black/60 p-1 rounded-xl border border-gray-800">
               {[16, 21, 24, 32].map((pts) => (
                 <button
@@ -1079,10 +1118,12 @@ function CreateLeagueModal({
           </div>
 
           <div>
-            <label className="text-[11px] font-bold text-gray-300 block mb-1">Beskrivelse (valgfritt)</label>
+            <label className="text-[11px] font-bold text-gray-300 block mb-1">
+              {isEnglish ? 'Description (optional)' : 'Beskrivelse (valgfritt)'}
+            </label>
             <input
               type="text"
-              placeholder="f.eks. Fast tirsdagsrunde på Oslo Padelklubb"
+              placeholder={isEnglish ? 'e.g. Regular Tuesday tournament at Oslo Padel' : 'f.eks. Fast tirsdagsrunde på Oslo Padelklubb'}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-[#BFFF00]"
@@ -1091,7 +1132,7 @@ function CreateLeagueModal({
 
           <div>
             <label className="text-[11px] font-bold text-gray-300 block mb-1">
-              Faste spillere ({selectedMemberIds.length} valgt)
+              {isEnglish ? `Regular members (${selectedMemberIds.length} selected)` : `Faste spillere (${selectedMemberIds.length} valgt)`}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-40 overflow-y-auto p-1 bg-black/40 rounded-xl border border-gray-800">
               {allPlayers.map((player) => {
@@ -1121,7 +1162,7 @@ function CreateLeagueModal({
             disabled={isPending || !name.trim()}
             className="w-full bg-[#BFFF00] text-black font-extrabold text-xs sm:text-sm py-3.5 rounded-2xl hover:bg-[#b0eb00] transition active:scale-95 disabled:opacity-40"
           >
-            {isPending ? 'Oppretter...' : 'Opprett liga'}
+            {isPending ? (isEnglish ? 'Creating...' : 'Oppretter...') : (isEnglish ? 'Create league' : 'Opprett liga')}
           </button>
         </div>
       </div>
@@ -1138,6 +1179,7 @@ function ManageMembersModal({
   allPlayers: any[];
   onClose: () => void;
 }) {
+  const { isEnglish } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [quickPlayerName, setQuickPlayerName] = useState('');
 
@@ -1170,10 +1212,14 @@ function ManageMembersModal({
         </button>
 
         <div className="mb-4">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">Medlemmer</span>
-          <h3 className="text-lg sm:text-xl font-extrabold text-white mt-0.5">Faste spillere i {league.name}</h3>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
+            {isEnglish ? 'Members' : 'Medlemmer'}
+          </span>
+          <h3 className="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+            {isEnglish ? `Regular members in ${league.name}` : `Faste spillere i ${league.name}`}
+          </h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            Legg til eller fjern faste deltakere for denne ligaen.
+            {isEnglish ? 'Add or remove regular players for this league.' : 'Legg til eller fjern faste deltakere for denne ligaen.'}
           </p>
         </div>
 
@@ -1181,7 +1227,7 @@ function ManageMembersModal({
         <div className="flex gap-2 mb-3 p-2 bg-gray-900 rounded-xl border border-gray-800">
           <input
             type="text"
-            placeholder="Opprett ny spiller og legg til i liga..."
+            placeholder={isEnglish ? 'Create new player and add to league...' : 'Opprett ny spiller og legg til i liga...'}
             value={quickPlayerName}
             onChange={(e) => setQuickPlayerName(e.target.value)}
             className="flex-1 bg-black border border-gray-700 text-white rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#BFFF00]"
@@ -1192,7 +1238,7 @@ function ManageMembersModal({
             disabled={isPending || !quickPlayerName.trim()}
             className="bg-[#BFFF00] text-black px-3 py-1.5 rounded-lg text-xs font-bold"
           >
-            + Legg til
+            + {isEnglish ? 'Add' : 'Legg til'}
           </button>
         </div>
 
@@ -1228,7 +1274,7 @@ function ManageMembersModal({
           onClick={onClose}
           className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs py-3 rounded-xl transition"
         >
-          Ferdig
+          {isEnglish ? 'Done' : 'Ferdig'}
         </button>
       </div>
     </div>

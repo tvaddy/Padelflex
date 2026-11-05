@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Clock
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 type TournamentTimerProps = {
   tournamentName?: string;
@@ -68,6 +69,7 @@ export default function TournamentTimer({
   defaultMinutes = 12,
   onTimeExpired 
 }: TournamentTimerProps) {
+  const { isEnglish } = useTranslation();
   const [targetDuration, setTargetDuration] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -288,7 +290,7 @@ export default function TournamentTimer({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
-                Tidskamp / Timer
+                {isEnglish ? 'Match Timer' : 'Tidskamp / Timer'}
               </span>
               {isRunning && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#BFFF00]/20 text-[#BFFF00]">
@@ -298,7 +300,7 @@ export default function TournamentTimer({
               )}
             </div>
             <p className="text-xs font-bold text-gray-200">
-              {isExpired ? '🚨 Tiden er ute!' : isRunning ? 'Spilletid pågår' : 'Klar til start'}
+              {isExpired ? (isEnglish ? '🚨 Time is up!' : '🚨 Tiden er ute!') : isRunning ? (isEnglish ? 'Match in progress' : 'Spilletid pågår') : (isEnglish ? 'Ready to start' : 'Klar til start')}
             </p>
           </div>
         </div>
@@ -311,7 +313,7 @@ export default function TournamentTimer({
             className={`p-2 rounded-xl text-xs font-bold transition ${
               soundEnabled ? 'text-[#BFFF00] bg-gray-900 hover:bg-gray-800' : 'text-gray-500 bg-gray-900/50'
             }`}
-            title={soundEnabled ? 'Lydvarsel er på' : 'Lydvarsel er av'}
+            title={soundEnabled ? (isEnglish ? 'Sound alert is on' : 'Lydvarsel er på') : (isEnglish ? 'Sound alert is off' : 'Lydvarsel er av')}
           >
             {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
           </button>
@@ -320,7 +322,7 @@ export default function TournamentTimer({
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white transition"
-            title={isExpanded ? 'Minimer timer' : 'Utvid timer'}
+            title={isExpanded ? (isEnglish ? 'Minimize timer' : 'Minimer timer') : (isEnglish ? 'Expand timer' : 'Utvid timer')}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -337,10 +339,12 @@ export default function TournamentTimer({
                 <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
                 <div>
                   <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
-                    Siste ball / Golden Point!
+                    {isEnglish ? 'Final Ball / Golden Point!' : 'Siste ball / Golden Point!'}
                   </h4>
                   <p className="text-[11px] text-red-300">
-                    Fullfør pågående poeng eller spill avgjørende ball for å kåre vinneren.
+                    {isEnglish 
+                      ? 'Finish the ongoing rally or play a deciding ball to determine the winner.'
+                      : 'Fullfør pågående poeng eller spill avgjørende ball for å kåre vinneren.'}
                   </p>
                 </div>
               </div>
@@ -349,7 +353,7 @@ export default function TournamentTimer({
                 onClick={handleReset}
                 className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold shrink-0 transition"
               >
-                Ny runde
+                {isEnglish ? 'New round' : 'Ny runde'}
               </button>
             </div>
           )}
@@ -367,7 +371,7 @@ export default function TournamentTimer({
                 {formattedTime}
               </div>
               <div className="text-xs text-gray-500 font-mono">
-                av {Math.round(targetDuration / 60)} min
+                {isEnglish ? 'of' : 'av'} {Math.round(targetDuration / 60)} min
               </div>
             </div>
 
@@ -389,7 +393,7 @@ export default function TournamentTimer({
                   className="px-5 py-2.5 bg-[#BFFF00] text-black hover:bg-[#b0eb00] font-black text-xs rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-[0_0_15px_rgba(191,255,0,0.3)]"
                 >
                   <Play className="w-4 h-4 fill-current" />
-                  <span>{secondsRemaining === 0 ? 'Start ny' : secondsRemaining < targetDuration ? 'Gjenoppta' : 'Start'}</span>
+                  <span>{secondsRemaining === 0 ? (isEnglish ? 'Start new' : 'Start ny') : secondsRemaining < targetDuration ? (isEnglish ? 'Resume' : 'Gjenoppta') : 'Start'}</span>
                 </button>
               )}
 
@@ -397,7 +401,7 @@ export default function TournamentTimer({
                 type="button"
                 onClick={() => handleAddMinute(1)}
                 className="px-3 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-800 font-bold text-xs rounded-xl flex items-center gap-1 transition active:scale-95"
-                title="Legg til 1 minutt"
+                title={isEnglish ? 'Add 1 minute' : 'Legg til 1 minutt'}
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>1m</span>
@@ -407,7 +411,7 @@ export default function TournamentTimer({
                 type="button"
                 onClick={() => handleAddMinute(2)}
                 className="px-3 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-800 font-bold text-xs rounded-xl flex items-center gap-1 transition active:scale-95"
-                title="Legg til 2 minutter"
+                title={isEnglish ? 'Add 2 minutes' : 'Legg til 2 minutter'}
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>2m</span>
@@ -417,7 +421,7 @@ export default function TournamentTimer({
                 type="button"
                 onClick={handleReset}
                 className="p-2.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-xl transition active:scale-95"
-                title="Tilbakestill tid"
+                title={isEnglish ? 'Reset time' : 'Tilbakestill tid'}
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -441,7 +445,7 @@ export default function TournamentTimer({
           {/* Presets Pills */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <span className="text-[10px] uppercase font-extrabold text-gray-500 mr-1">
-              Valg:
+              {isEnglish ? 'Presets:' : 'Valg:'}
             </span>
             {PRESETS.map((mins) => {
               const isSelected = targetDuration === mins * 60 && !showCustomInput;
@@ -470,7 +474,7 @@ export default function TournamentTimer({
                   : 'bg-gray-900 hover:bg-gray-800 text-gray-400 border border-gray-800'
               }`}
             >
-              Tilpass...
+              {isEnglish ? 'Custom...' : 'Tilpass...'}
             </button>
 
             {showCustomInput && (
@@ -489,7 +493,7 @@ export default function TournamentTimer({
                   type="submit"
                   className="px-2.5 py-1.5 bg-[#BFFF00] text-black text-xs font-bold rounded-lg hover:bg-[#b0eb00] transition"
                 >
-                  Sett
+                  {isEnglish ? 'Set' : 'Sett'}
                 </button>
               </form>
             )}

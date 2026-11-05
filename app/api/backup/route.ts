@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import prisma from '@/lib/prisma';
+import prisma, { ensureDbSchemaMigrated } from '@/lib/prisma';
 import { verifyAdmin } from '@/lib/auth';
 
 function checkAdminAuth(req: NextRequest, bodyPassword?: string): boolean {
@@ -28,13 +28,16 @@ export async function GET(req: NextRequest) {
 
   if (format === 'json') {
     try {
-      const [users, leagues, leagueMembers, tournaments, participants, matches] = await Promise.all([
+      await ensureDbSchemaMigrated(prisma);
+
+      const [users, leagues, leagueMembers, tournaments, participants, matches, standaloneMatches] = await Promise.all([
         prisma.user.findMany(),
         prisma.league.findMany(),
         prisma.leagueMember.findMany(),
         prisma.tournament.findMany(),
         prisma.tournamentParticipant.findMany(),
         prisma.match.findMany(),
+        prisma.standaloneMatch.findMany(),
       ]);
 
       const backupData = {
@@ -48,6 +51,7 @@ export async function GET(req: NextRequest) {
           tournaments: tournaments.length,
           participants: participants.length,
           matches: matches.length,
+          standaloneMatches: standaloneMatches.length,
         },
         data: {
           users,
@@ -56,6 +60,7 @@ export async function GET(req: NextRequest) {
           tournaments,
           participants,
           matches,
+          standaloneMatches,
         },
       };
 
@@ -125,11 +130,23 @@ export async function POST(req: NextRequest) {
     }
 
     const dataObj = backupData.data || backupData;
-    const { users = [], leagues = [], leagueMembers = [], tournaments = [], participants = [], matches = [] } = dataObj;
+    const { 
+      users = [], 
+      leagues = [], 
+      leagueMembers = [], 
+      tournaments = [], 
+      participants = [], 
+      matches = [],
+      standaloneMatches = [] 
+    } = dataObj;
+
+    // Sørg for at alle kolonner (som highestElo, lowestElo, etc.) eksisterer i databasen før innsetting
+    await ensureDbSchemaMigrated(prisma);
 
     // Utfør full gjenoppretting i en transaksjon
     await prisma.$transaction(async (tx) => {
       // 1. Slett eksisterende data i riktig rekkefølge for foreign keys
+      await tx.standaloneMatch.deleteMany({});
       await tx.match.deleteMany({});
       await tx.tournamentParticipant.deleteMany({});
       await tx.tournament.deleteMany({});
@@ -137,14 +154,18 @@ export async function POST(req: NextRequest) {
       await tx.league.deleteMany({});
       await tx.user.deleteMany({});
 
-      // 2. Sett inn brukere
+      // 2. Sett inn brukere med Elo-historikk
       if (users.length > 0) {
         for (const u of users) {
+          const elo = typeof u.eloRating === 'number' ? u.eloRating : 1500.0;
           await tx.user.create({
             data: {
               id: u.id,
               name: u.name,
               accessCode: u.accessCode || 'default',
+              eloRating: elo,
+              highestElo: typeof u.highestElo === 'number' ? u.highestElo : elo,
+              lowestElo: typeof u.lowestElo === 'number' ? u.lowestElo : elo,
               isArchived: Boolean(u.isArchived),
               createdAt: u.createdAt ? new Date(u.createdAt) : new Date(),
             },
@@ -159,8 +180,8 @@ export async function POST(req: NextRequest) {
             data: {
               id: l.id,
               name: l.name,
-              description: l.description,
-              defaultTargetScore: l.defaultTargetScore ?? 21,
+              description: l.description || null,
+              defaultTargetScore: typeof l.defaultTargetScore === 'number' ? l.defaultTargetScore : 21,
               isArchived: Boolean(l.isArchived),
               accessCode: l.accessCode || 'default',
               completedAt: l.completedAt ? new Date(l.completedAt) : null,
@@ -170,14 +191,18 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 4. Sett inn ligamedlemmer
+      // 4. Sett inn ligamedlemmer med rating
       if (leagueMembers.length > 0) {
         for (const lm of leagueMembers) {
+          const elo = typeof lm.eloRating === 'number' ? lm.eloRating : 1500.0;
           await tx.leagueMember.create({
             data: {
               id: lm.id,
               leagueId: lm.leagueId,
               userId: lm.userId,
+              eloRating: elo,
+              highestElo: typeof lm.highestElo === 'number' ? lm.highestElo : elo,
+              lowestElo: typeof lm.lowestElo === 'number' ? lm.lowestElo : elo,
               createdAt: lm.createdAt ? new Date(lm.createdAt) : new Date(),
             },
           });
@@ -193,9 +218,9 @@ export async function POST(req: NextRequest) {
               name: t.name,
               isActive: Boolean(t.isActive),
               type: t.type || 'AMERICANO',
-              courtCount: t.courtCount ?? 1,
-              targetScore: t.targetScore ?? 21,
-              originalTargetScore: t.originalTargetScore,
+              courtCount: typeof t.courtCount === 'number' ? t.courtCount : 1,
+              targetScore: typeof t.targetScore === 'number' ? t.targetScore : 21,
+              originalTargetScore: typeof t.originalTargetScore === 'number' ? t.originalTargetScore : null,
               isArchived: Boolean(t.isArchived),
               accessCode: t.accessCode || 'default',
               createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
@@ -220,30 +245,68 @@ export async function POST(req: NextRequest) {
               matchesLost: p.matchesLost ?? 0,
               pausedCount: p.pausedCount ?? 0,
               isPaused: Boolean(p.isPaused),
+              tournamentElo: typeof p.tournamentElo === 'number' ? p.tournamentElo : 1500.0,
+              initialElo: typeof p.initialElo === 'number' ? p.initialElo : 1500.0,
+              eloDelta: typeof p.eloDelta === 'number' ? p.eloDelta : 0.0,
             },
           });
         }
       }
 
-      // 7. Sett inn kamper
+      // 7. Sett inn kamper med Elo-detaljer
       if (matches.length > 0) {
         for (const m of matches) {
           await tx.match.create({
             data: {
               id: m.id,
               tournamentId: m.tournamentId,
-              courtNumber: m.courtNumber ?? 1,
+              courtNumber: typeof m.courtNumber === 'number' ? m.courtNumber : 1,
+              status: m.status || (m.isCompleted ? 'COMPLETED' : 'PENDING'),
+              version: typeof m.version === 'number' ? m.version : 1,
               date: m.date ? new Date(m.date) : new Date(),
               startedAt: m.startedAt ? new Date(m.startedAt) : new Date(),
               completedAt: m.completedAt ? new Date(m.completedAt) : null,
+              updatedAt: m.updatedAt ? new Date(m.updatedAt) : new Date(),
               teamAPlayer1Id: m.teamAPlayer1Id,
               teamAPlayer2Id: m.teamAPlayer2Id,
               teamBPlayer1Id: m.teamBPlayer1Id,
               teamBPlayer2Id: m.teamBPlayer2Id,
               teamAScore: m.teamAScore ?? 0,
               teamBScore: m.teamBScore ?? 0,
-              winnerTeam: m.winnerTeam,
+              winnerTeam: m.winnerTeam || null,
               isCompleted: Boolean(m.isCompleted),
+              teamAEloBefore: typeof m.teamAEloBefore === 'number' ? m.teamAEloBefore : null,
+              teamBEloBefore: typeof m.teamBEloBefore === 'number' ? m.teamBEloBefore : null,
+              eloDelta: typeof m.eloDelta === 'number' ? m.eloDelta : null,
+            },
+          });
+        }
+      }
+
+      // 8. Sett inn frittstående kamper hvis til stede
+      if (standaloneMatches.length > 0) {
+        for (const sm of standaloneMatches) {
+          await tx.standaloneMatch.create({
+            data: {
+              id: sm.id,
+              name: sm.name || 'Padelkamp',
+              accessCode: sm.accessCode || 'default',
+              teamAPlayer1: sm.teamAPlayer1,
+              teamAPlayer2: sm.teamAPlayer2,
+              teamBPlayer1: sm.teamBPlayer1,
+              teamBPlayer2: sm.teamBPlayer2,
+              teamAPlayer1Id: sm.teamAPlayer1Id || null,
+              teamAPlayer2Id: sm.teamAPlayer2Id || null,
+              teamBPlayer1Id: sm.teamBPlayer1Id || null,
+              teamBPlayer2Id: sm.teamBPlayer2Id || null,
+              format: sm.format || 'BEST_OF_3',
+              goldenPoint: sm.goldenPoint !== undefined ? Boolean(sm.goldenPoint) : true,
+              scoresJson: sm.scoresJson || '{}',
+              winnerTeam: sm.winnerTeam || null,
+              isCompleted: Boolean(sm.isCompleted),
+              startedAt: sm.startedAt ? new Date(sm.startedAt) : new Date(),
+              completedAt: sm.completedAt ? new Date(sm.completedAt) : null,
+              createdAt: sm.createdAt ? new Date(sm.createdAt) : new Date(),
             },
           });
         }
@@ -258,6 +321,7 @@ export async function POST(req: NextRequest) {
         leagues: leagues.length,
         tournaments: tournaments.length,
         matches: matches.length,
+        standaloneMatches: standaloneMatches.length,
       },
     });
   } catch (error: any) {

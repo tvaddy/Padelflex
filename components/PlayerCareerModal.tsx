@@ -19,6 +19,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { getPlayerCareerStats } from '@/app/actions';
+import { useTranslation } from '@/lib/i18n';
 
 type PlayerCareerModalProps = {
   playerId: string;
@@ -31,6 +32,7 @@ export default function PlayerCareerModal({
   playerName,
   onClose,
 }: PlayerCareerModalProps) {
+  const { isEnglish } = useTranslation();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedFormMatch, setSelectedFormMatch] = useState<any | null>(null);
@@ -64,11 +66,11 @@ export default function PlayerCareerModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
-                  Spillerprofil & Analyse
+                  {isEnglish ? 'Player Profile & Analysis' : 'Spillerprofil & Analyse'}
                 </span>
                 {stats?.totalElo && (
                   <span className="px-2 py-0.5 bg-[#BFFF00]/15 border border-[#BFFF00]/30 text-[#BFFF00] rounded-full text-[10px] font-mono font-bold">
-                    Totalrating: {stats.totalElo}
+                    {isEnglish ? 'Rating' : 'Totalrating'}: {stats.totalElo}
                   </span>
                 )}
               </div>
@@ -89,13 +91,15 @@ export default function PlayerCareerModal({
           {loading ? (
             <div className="p-8 text-center text-gray-400 space-y-2">
               <div className="w-8 h-8 border-2 border-[#BFFF00] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-mono">Henter statistikk...</p>
+              <p className="text-xs font-mono">{isEnglish ? 'Fetching statistics...' : 'Henter statistikk...'}</p>
             </div>
           ) : !stats || stats.matchesCount === 0 ? (
             <div className="p-8 bg-gray-900/50 rounded-2xl border border-gray-800 text-center space-y-1">
-              <p className="text-gray-300 font-bold text-sm">Ingen fullførte kamper enda</p>
+              <p className="text-gray-300 font-bold text-sm">{isEnglish ? 'No completed matches yet' : 'Ingen fullførte kamper enda'}</p>
               <p className="text-gray-500 text-xs">
-                Statistikk, formkurve og makkersynergi vil vises her når {playerName} har spilt kamper.
+                {isEnglish 
+                  ? `Statistics, form curve, and partner synergy will appear here once ${playerName} has played matches.`
+                  : `Statistikk, formkurve og makkersynergi vil vises her når ${playerName} har spilt kamper.`}
               </p>
             </div>
           ) : (
@@ -103,36 +107,36 @@ export default function PlayerCareerModal({
               {/* Nøkkeltall Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Kamper</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Matches' : 'Kamper'}</span>
                   <span className="text-xl font-black text-white mt-0.5 block">{stats.matchesCount}</span>
-                  <span className="text-[10px] text-gray-500">{stats.tournamentsCount} turneringer</span>
+                  <span className="text-[10px] text-gray-500">{stats.tournamentsCount} {isEnglish ? 'tournaments' : 'turneringer'}</span>
                 </div>
 
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">S - U - T</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'W - D - L' : 'S - U - T'}</span>
                   <span className="text-xl font-black text-white mt-0.5 block font-mono">
                     <span className="text-green-400">{stats.won}</span>-
                     <span className="text-amber-400">{stats.drawn}</span>-
                     <span className="text-red-400">{stats.lost}</span>
                   </span>
-                  <span className="text-[10px] text-gray-500">{stats.winRate}% seiersrate</span>
+                  <span className="text-[10px] text-gray-500">{stats.winRate}% {isEnglish ? 'win rate' : 'seiersrate'}</span>
                 </div>
 
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Totalrating</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Total Rating' : 'Totalrating'}</span>
                   <span className="text-xl font-black text-[#BFFF00] mt-0.5 block font-mono">{stats.totalElo || 1500}</span>
-                  <span className="text-[10px] text-gray-500">snitt {stats.avgPoints}p / kamp</span>
+                  <span className="text-[10px] text-gray-500">{isEnglish ? 'avg' : 'snitt'} {stats.avgPoints}p / {isEnglish ? 'match' : 'kamp'}</span>
                 </div>
 
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Måldifferanse</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Point Difference' : 'Måldifferanse'}</span>
                   <span className={`text-xl font-black mt-0.5 block font-mono ${
                     stats.pointDiff > 0 ? 'text-green-400' : stats.pointDiff < 0 ? 'text-red-400' : 'text-gray-200'
                   }`}>
                     {stats.pointDiff > 0 ? `+${stats.pointDiff}` : stats.pointDiff}
                   </span>
                   <span className="text-[10px] text-gray-500">
-                    {stats.totalPointsScored || 0} scoret / {stats.totalPointsConceded || 0} innsl.
+                    {stats.totalPointsScored || 0} {isEnglish ? 'scored' : 'scoret'} / {stats.totalPointsConceded || 0} {isEnglish ? 'conceded' : 'innsl.'}
                   </span>
                 </div>
               </div>
@@ -143,23 +147,20 @@ export default function PlayerCareerModal({
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                       <Trophy className="w-3.5 h-3.5 text-[#BFFF00]" />
-                      <span>Turneringshistorikk</span>
+                      <span>{isEnglish ? 'Tournament History' : 'Turneringshistorikk'}</span>
                     </h4>
                     <span className="text-[10px] font-mono text-gray-500">
-                      {stats.tournamentHistory.length} turneringer spilt
+                      {stats.tournamentHistory.length} {isEnglish ? 'tournaments played' : 'turneringer spilt'}
                     </span>
                   </div>
 
                   <div className="space-y-2">
                     {stats.tournamentHistory.map((th: any) => {
-                      const dateStr = new Date(th.date).toLocaleDateString('no-NB', {
+                      const dateStr = new Date(th.date).toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
                       });
-                      const delta = th.eloDelta || 0;
-                      const isPositiveDelta = delta > 0;
-                      const isNegativeDelta = delta < 0;
 
                       return (
                         <div
@@ -179,7 +180,7 @@ export default function PlayerCareerModal({
                               <span>{dateStr}</span>
                               <span>•</span>
                               <span>
-                                {th.placement === 1 ? '🥇 1. plass' : `${th.placement}. plass`} ({th.totalParticipants} spillere)
+                                {th.placement === 1 ? (isEnglish ? '🥇 1st place' : '🥇 1. plass') : `${th.placement}${isEnglish ? 'th place' : '. plass'}`} ({th.totalParticipants} {isEnglish ? 'players' : 'spillere'})
                               </span>
                               <span>•</span>
                               <span className="text-white font-bold">{th.totalPoints}p</span>
@@ -189,9 +190,9 @@ export default function PlayerCareerModal({
                           <div className="flex items-center gap-3 shrink-0">
                             {/* Record */}
                             <span className="text-[11px] font-mono text-gray-400">
-                              <span className="text-green-400 font-bold">{th.matchesWon}</span>V -{' '}
-                              <span className="text-amber-400 font-bold">{th.matchesDrawn}</span>U -{' '}
-                              <span className="text-red-400 font-bold">{th.matchesLost}</span>T
+                              <span className="text-green-400 font-bold">{th.matchesWon}</span>{isEnglish ? 'W' : 'V'} -{' '}
+                              <span className="text-amber-400 font-bold">{th.matchesDrawn}</span>{isEnglish ? 'D' : 'U'} -{' '}
+                              <span className="text-red-400 font-bold">{th.matchesLost}</span>{isEnglish ? 'L' : 'T'}
                             </span>
 
                             {/* Score/Placement badge */}
@@ -200,7 +201,7 @@ export default function PlayerCareerModal({
                                 <span className="text-xs font-black font-mono text-[#BFFF00]">
                                   {th.totalPoints}
                                 </span>
-                                <span className="text-[9px] text-gray-500 uppercase font-mono">poeng</span>
+                                <span className="text-[9px] text-gray-500 uppercase font-mono">{isEnglish ? 'pts' : 'poeng'}</span>
                               </div>
                             </div>
                           </div>
@@ -217,7 +218,7 @@ export default function PlayerCareerModal({
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5 text-[#BFFF00]" />
-                      <span>Formkurve (Siste kamper)</span>
+                      <span>{isEnglish ? 'Form Curve (Recent matches)' : 'Formkurve (Siste kamper)'}</span>
                     </h4>
                     {stats.currentStreak && stats.currentStreak.count > 0 && (
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
@@ -251,35 +252,35 @@ export default function PlayerCareerModal({
                               ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
                               : 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
                           } ${isSelected ? 'ring-2 ring-white shadow-lg' : ''}`}
-                          title={`Kamp ${idx + 1}: ${m.myScore}-${m.oppScore} vs ${m.opponentNames?.join(', ')}`}
+                          title={`${isEnglish ? 'Match' : 'Kamp'} ${idx + 1}: ${m.myScore}-${m.oppScore} vs ${m.opponentNames?.join(', ')}`}
                         >
-                          {isWon ? 'V' : isDraw ? 'U' : 'T'}
+                          {isWon ? (isEnglish ? 'W' : 'V') : isDraw ? (isEnglish ? 'D' : 'U') : (isEnglish ? 'L' : 'T')}
                         </button>
                       );
                     })}
-                    <span className="text-[10px] text-gray-500 font-mono ml-1 shrink-0">← Siste</span>
+                    <span className="text-[10px] text-gray-500 font-mono ml-1 shrink-0">{isEnglish ? '← Recent' : '← Siste'}</span>
                   </div>
 
                   {/* Selected Form Match Popup Details */}
                   {selectedFormMatch && (
                     <div className="p-3 bg-gray-900/90 rounded-xl border border-gray-700 text-xs space-y-1 animate-in fade-in">
                       <div className="flex items-center justify-between text-gray-400 text-[11px]">
-                        <span>{selectedFormMatch.tournamentName || 'Turnering'}</span>
+                        <span>{selectedFormMatch.tournamentName || (isEnglish ? 'Tournament' : 'Turnering')}</span>
                         <span className={`font-bold ${
                           selectedFormMatch.result === 'WON' ? 'text-green-400' : selectedFormMatch.result === 'DRAW' ? 'text-amber-300' : 'text-red-400'
                         }`}>
-                          Resultat: {selectedFormMatch.myScore} - {selectedFormMatch.oppScore}
+                          {isEnglish ? 'Result:' : 'Resultat:'} {selectedFormMatch.myScore} - {selectedFormMatch.oppScore}
                         </span>
                       </div>
                       <p className="text-gray-300 font-medium">
-                        Makker: <strong className="text-white">{selectedFormMatch.partnerName}</strong>
+                        {isEnglish ? 'Partner:' : 'Makker:'} <strong className="text-white">{selectedFormMatch.partnerName}</strong>
                       </p>
                       <p className="text-gray-400 text-[11px]">
-                        Motstandere: {selectedFormMatch.opponentNames?.join(' & ')}
+                        {isEnglish ? 'Opponents:' : 'Motstandere:'} {selectedFormMatch.opponentNames?.join(' & ')}
                       </p>
                       {selectedFormMatch.eloDelta !== undefined && (
                         <p className="text-[11px] font-mono text-gray-400">
-                          Rating-endring: <span className={selectedFormMatch.eloDelta >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          {isEnglish ? 'Rating change:' : 'Rating-endring:'} <span className={selectedFormMatch.eloDelta >= 0 ? 'text-green-400' : 'text-red-400'}>
                             {selectedFormMatch.eloDelta >= 0 ? `+${selectedFormMatch.eloDelta}` : selectedFormMatch.eloDelta} Elo
                           </span>
                         </p>
@@ -296,7 +297,7 @@ export default function PlayerCareerModal({
                   <div className="flex items-center gap-2 text-amber-400">
                     <Crown className="w-4 h-4 text-amber-400 shrink-0" />
                     <span className="text-[11px] font-extrabold uppercase tracking-wider">
-                      Drømmemakker
+                      {isEnglish ? 'Dream Partner' : 'Drømmemakker'}
                     </span>
                   </div>
 
@@ -304,15 +305,17 @@ export default function PlayerCareerModal({
                     <div>
                       <h4 className="text-base font-black text-white">{stats.dreamPartner.name}</h4>
                       <p className="text-xs text-amber-300 font-bold mt-0.5">
-                        {stats.dreamPartner.winRate}% seier ({stats.dreamPartner.wonTogether} av {stats.dreamPartner.matchesTogether} kamper)
+                        {isEnglish
+                          ? `${stats.dreamPartner.winRate}% win rate (${stats.dreamPartner.wonTogether} of ${stats.dreamPartner.matchesTogether} matches)`
+                          : `${stats.dreamPartner.winRate}% seier (${stats.dreamPartner.wonTogether} av ${stats.dreamPartner.matchesTogether} kamper)`}
                       </p>
                       <p className="text-[11px] text-gray-400 mt-1">
-                        Snitt: <strong className="text-white font-mono">{stats.dreamPartner.avgPointsTogether}p</strong> per kamp sammen
+                        {isEnglish ? 'Average:' : 'Snitt:'} <strong className="text-white font-mono">{stats.dreamPartner.avgPointsTogether}p</strong> {isEnglish ? 'per match together' : 'per kamp sammen'}
                       </p>
                     </div>
                   ) : (
                     <p className="text-gray-500 text-xs">
-                      Ingen fast drømmemakker registrert enda.
+                      {isEnglish ? 'No regular dream partner recorded yet.' : 'Ingen fast drømmemakker registrert enda.'}
                     </p>
                   )}
                 </div>
@@ -322,7 +325,7 @@ export default function PlayerCareerModal({
                   <div className="flex items-center gap-2 text-purple-400">
                     <Skull className="w-4 h-4 text-purple-400 shrink-0" />
                     <span className="text-[11px] font-extrabold uppercase tracking-wider">
-                      Kryptonitt
+                      {isEnglish ? 'Kryptonite' : 'Kryptonitt'}
                     </span>
                   </div>
 
@@ -330,10 +333,12 @@ export default function PlayerCareerModal({
                     <div>
                       <h4 className="text-base font-black text-white">{stats.kryptonite.name}</h4>
                       <p className="text-xs text-purple-300 font-bold mt-0.5">
-                        {stats.kryptonite.lostAgainst} tap på {stats.kryptonite.matchesAgainst} møter ({stats.kryptonite.lossRate}% tap)
+                        {isEnglish
+                          ? `${stats.kryptonite.lostAgainst} losses in ${stats.kryptonite.matchesAgainst} matches (${stats.kryptonite.lossRate}% loss rate)`
+                          : `${stats.kryptonite.lostAgainst} tap på ${stats.kryptonite.matchesAgainst} møter (${stats.kryptonite.lossRate}% tap)`}
                       </p>
                       <p className="text-[11px] text-gray-400 mt-1">
-                        Måldifferanse mot {stats.kryptonite.name}: <strong className={`font-mono ${
+                        {isEnglish ? `Point diff vs ${stats.kryptonite.name}:` : `Måldifferanse mot ${stats.kryptonite.name}:`} <strong className={`font-mono ${
                           stats.kryptonite.pointDiffAgainst > 0 ? 'text-green-400' : stats.kryptonite.pointDiffAgainst < 0 ? 'text-red-400' : 'text-gray-300'
                         }`}>
                           {stats.kryptonite.pointDiffAgainst > 0 ? `+${stats.kryptonite.pointDiffAgainst}` : stats.kryptonite.pointDiffAgainst}
@@ -342,7 +347,7 @@ export default function PlayerCareerModal({
                     </div>
                   ) : (
                     <p className="text-gray-500 text-xs">
-                      Ingen spesifikk kryptonitt funnet enda.
+                      {isEnglish ? 'No specific kryptonite found yet.' : 'Ingen spesifikk kryptonitt funnet enda.'}
                     </p>
                   )}
                 </div>
@@ -352,11 +357,11 @@ export default function PlayerCareerModal({
               <div className="bg-black/60 border border-gray-800 rounded-2xl p-3.5 space-y-2.5">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-[#BFFF00]" />
-                  <span>Hyppigste makkere</span>
+                  <span>{isEnglish ? 'Frequent Partners' : 'Hyppigste makkere'}</span>
                 </h4>
 
                 {stats.partners.length === 0 ? (
-                  <p className="text-gray-500 text-xs">Ingen makkere registrert.</p>
+                  <p className="text-gray-500 text-xs">{isEnglish ? 'No partners recorded.' : 'Ingen makkere registrert.'}</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {stats.partners.slice(0, 6).map((p: any) => (
@@ -366,7 +371,7 @@ export default function PlayerCareerModal({
                           <span className="px-2 py-0.5 rounded-md bg-[#BFFF00]/15 text-[#BFFF00] font-bold text-[11px]">
                             {p.count}x
                           </span>
-                          <span className="text-[10px] text-gray-400">({p.won} seire)</span>
+                          <span className="text-[10px] text-gray-400">({p.won} {isEnglish ? 'wins' : 'seire'})</span>
                         </div>
                       </div>
                     ))}
@@ -378,11 +383,11 @@ export default function PlayerCareerModal({
               <div className="bg-black/60 border border-gray-800 rounded-2xl p-3.5 space-y-2.5">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                   <Swords className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Hyppigste motstandere</span>
+                  <span>{isEnglish ? 'Frequent Opponents' : 'Hyppigste motstandere'}</span>
                 </h4>
 
                 {stats.opponents.length === 0 ? (
-                  <p className="text-gray-500 text-xs">Ingen motstandere registrert.</p>
+                  <p className="text-gray-500 text-xs">{isEnglish ? 'No opponents recorded.' : 'Ingen motstandere registrert.'}</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {stats.opponents.slice(0, 6).map((opp: any) => (

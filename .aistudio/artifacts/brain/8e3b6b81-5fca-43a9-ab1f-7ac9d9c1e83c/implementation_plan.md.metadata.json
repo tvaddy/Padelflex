@@ -1,0 +1,6 @@
+{
+  "summary": "Plan for dynamic server-side runtime injection of environment variables (NEXT_PUBLIC_APP_LANGUAGE and NEXT_PUBLIC_ENABLE_TEST_PROFILE) so changing them in docker-compose.yml works immediately without rebuilding the image, plus an interactive in-app language switcher.",
+  "updatedAt": "2026-11-05T21:31:05.844764152Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

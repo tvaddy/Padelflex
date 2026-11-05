@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { createTournament, addPlayer } from '@/app/actions';
 import AmericanoCalculatorModal from './AmericanoCalculatorModal';
+import { useTranslation } from '@/lib/i18n';
 
 type StartTournamentModalProps = {
   onClose: () => void;
@@ -37,6 +38,7 @@ export default function StartTournamentModal({
   initialCourtCount = null,
   onTournamentStarted,
 }: StartTournamentModalProps) {
+  const { t, isEnglish } = useTranslation();
   const defaultTargetLeague = defaultLeagueId ? leagues.find(l => l.id === defaultLeagueId) : null;
 
   const [step, setStep] = useState<'select_type' | 'configure'>(defaultTargetLeague || initialTargetScore ? 'configure' : 'select_type');
@@ -81,12 +83,12 @@ export default function StartTournamentModal({
   }, []);
 
   const tomorrowFormatted = useMemo(() => {
-    return tomorrowDate.toLocaleDateString('no-NB', {
+    return tomorrowDate.toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
     });
-  }, [tomorrowDate]);
+  }, [tomorrowDate, isEnglish]);
 
   // Rask ny spiller opprettelse
   const [isAddingNewPlayer, setIsAddingNewPlayer] = useState(false);
@@ -189,13 +191,15 @@ export default function StartTournamentModal({
           <div className="space-y-5">
             <div>
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#BFFF00]">
-                Ny Turnering
+                {t.tournamentModal.newTournamentTitle}
               </span>
               <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-                Hva slags turnering vil du starte?
+                {isEnglish ? 'What type of tournament do you want to start?' : 'Hva slags turnering vil du starte?'}
               </h2>
               <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
-                Velg en frittstående enkeltturnering eller spill en runde i en eksisterende liga.
+                {isEnglish 
+                  ? 'Choose a standalone tournament or play a round in an existing league.' 
+                  : 'Velg en frittstående enkeltturnering eller spill en runde i en eksisterende liga.'}
               </p>
             </div>
 
@@ -214,14 +218,14 @@ export default function StartTournamentModal({
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-extrabold text-base sm:text-lg group-hover:text-[#BFFF00] transition">
-                          Enkeltturnering
+                          {t.tournamentModal.singleTournamentTitle}
                         </span>
                         <span className="px-2 py-0.5 bg-[#BFFF00]/20 text-[#BFFF00] border border-[#BFFF00]/40 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
-                          Frittstående
+                          {isEnglish ? 'Standalone' : 'Frittstående'}
                         </span>
                       </div>
                       <p className="text-gray-400 text-xs mt-0.5">
-                        Uavhengig Americano eller Mexicano for kvelden.
+                        {t.tournamentModal.singleTournamentDesc}
                       </p>
                     </div>
                   </div>
@@ -233,7 +237,7 @@ export default function StartTournamentModal({
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-gray-800"></div>
                 <span className="flex-shrink mx-3 text-[10px] font-extrabold tracking-widest text-gray-500 uppercase">
-                  Eller velg en liga
+                  {isEnglish ? 'Or choose a league' : 'Eller velg en liga'}
                 </span>
                 <div className="flex-grow border-t border-gray-800"></div>
               </div>
@@ -241,9 +245,13 @@ export default function StartTournamentModal({
               {/* 2. EN KNAPP PER EKSISTERENDE LIGA */}
               {activeLeagues.length === 0 ? (
                 <div className="p-5 bg-gray-900/40 border border-gray-800/80 rounded-2xl text-center">
-                  <p className="text-gray-400 text-xs font-medium">Ingen aktive ligaer funnet.</p>
+                  <p className="text-gray-400 text-xs font-medium">
+                    {isEnglish ? 'No active leagues found.' : 'Ingen aktive ligaer funnet.'}
+                  </p>
                   <p className="text-gray-600 text-[11px] mt-0.5">
-                    Opprett en liga i «Ligaer»-fanen for å samle runder og føre tabell.
+                    {isEnglish 
+                      ? 'Create a league in the "Leagues" tab to track rounds and standings.' 
+                      : 'Opprett en liga i «Ligaer»-fanen for å samle runder og føre tabell.'}
                   </p>
                 </div>
               ) : (
@@ -272,7 +280,7 @@ export default function StartTournamentModal({
                               </span>
                             </div>
                             <span className="text-gray-500 text-xs block">
-                              {memberCount} faste spillere • {tourneyCount} runder spilt
+                              {memberCount} {isEnglish ? 'fixed members' : 'faste spillere'} • {tourneyCount} {isEnglish ? 'rounds played' : 'runder spilt'}
                             </span>
                           </div>
                         </div>
@@ -297,7 +305,7 @@ export default function StartTournamentModal({
                   onClick={() => setStep('select_type')}
                   className="text-xs text-gray-400 hover:text-white underline"
                 >
-                  ← Velg annen type
+                  ← {isEnglish ? 'Choose another type' : 'Velg annen type'}
                 </button>
                 <span className="text-gray-600">•</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
@@ -305,10 +313,12 @@ export default function StartTournamentModal({
                     ? 'bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/30' 
                     : 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30'
                 }`}>
-                  {selectedLeague ? `Liga: ${selectedLeague.name}` : 'Enkeltturnering'}
+                  {selectedLeague ? `${isEnglish ? 'League' : 'Liga'}: ${selectedLeague.name}` : t.tournamentModal.singleTournamentTitle}
                 </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-white">Konfigurer turnering</h2>
+              <h2 className="text-lg sm:text-xl font-extrabold text-white">
+                {isEnglish ? 'Configure tournament' : 'Konfigurer turnering'}
+              </h2>
             </div>
 
             {/* Americano Tidskalkulator Snarvei */}
@@ -325,14 +335,16 @@ export default function StartTournamentModal({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-white font-extrabold text-xs sm:text-sm group-hover:text-[#BFFF00] transition">
-                        Tidskalkulator for Americano
+                        {t.tournamentModal.timeCalculator}
                       </span>
                       <span className="px-1.5 py-0.2 bg-[#BFFF00]/20 text-[#BFFF00] text-[9px] font-extrabold rounded">
-                        Beregn runder
+                        {isEnglish ? 'Calculate rounds' : 'Beregn runder'}
                       </span>
                     </div>
                     <p className="text-gray-400 text-[11px] mt-0.5">
-                      Beregn hvor mange runder dere rekker på banetiden og overfør oppsettet hit.
+                      {isEnglish 
+                        ? 'Calculate how many rounds you can fit in your court time and apply setup.' 
+                        : 'Beregn hvor mange runder dere rekker på banetiden og overfør oppsettet hit.'}
                     </p>
                   </div>
                 </div>
@@ -359,7 +371,7 @@ export default function StartTournamentModal({
             {/* Spillform (Americano vs Mexicano) */}
             <div>
               <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1.5">
-                Spillform
+                {t.tournamentModal.selectTournamentType}
               </label>
               <div className="grid grid-cols-2 gap-2 bg-black/60 p-1 rounded-xl border border-gray-800">
                 <button
@@ -393,10 +405,10 @@ export default function StartTournamentModal({
               <div>
                 <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <LayoutGrid className="w-3 h-3 text-[#BFFF00]" /> Antall baner
+                    <LayoutGrid className="w-3 h-3 text-[#BFFF00]" /> {t.tournamentModal.selectCourts}
                   </span>
                   <span className="text-[10px] text-gray-500">
-                    {courtCount * 4} spillere / runde
+                    {courtCount * 4} {isEnglish ? 'players / round' : 'spillere / runde'}
                   </span>
                 </label>
                 <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-xl border border-gray-800">
@@ -411,7 +423,7 @@ export default function StartTournamentModal({
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
-                      {num} {num === 1 ? 'Bane' : 'Baner'}
+                      {num} {num === 1 ? t.common.court : isEnglish ? 'Courts' : 'Baner'}
                     </button>
                   ))}
                 </div>
@@ -420,9 +432,11 @@ export default function StartTournamentModal({
               {/* Målscore - Standard 21 poeng */}
               <div>
                 <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center justify-between">
-                  <span>Målscore / kamp</span>
+                  <span>{t.tournamentModal.targetScoreTitle}</span>
                   {selectedLeague && (
-                    <span className="text-[10px] text-[#BFFF00]">Ligastandard: {selectedLeague.defaultTargetScore || 21}p</span>
+                    <span className="text-[10px] text-[#BFFF00]">
+                      {isEnglish ? 'League default' : 'Ligastandard'}: {selectedLeague.defaultTargetScore || 21}p
+                    </span>
                   )}
                 </label>
                 <div className="grid grid-cols-4 gap-1 bg-black/60 p-1 rounded-xl border border-gray-800">
@@ -449,14 +463,14 @@ export default function StartTournamentModal({
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-[#BFFF00]" />
-                  Velg Spillere ({selectedPlayerIds.length} valgt, min. {courtCount * 4})
+                  {t.tournamentModal.selectPlayersTitle} ({selectedPlayerIds.length} {t.tournamentModal.selected}, min. {courtCount * 4})
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsAddingNewPlayer(true)}
                   className="text-xs font-bold text-[#BFFF00] hover:underline flex items-center gap-1"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Ny spiller
+                  <Plus className="w-3.5 h-3.5" /> {t.tournamentModal.addNewPlayer}
                 </button>
               </div>
 
@@ -465,7 +479,7 @@ export default function StartTournamentModal({
                 <div className="flex gap-2 mb-2 p-2 bg-gray-900 rounded-xl border border-gray-800 animate-in fade-in">
                   <input
                     type="text"
-                    placeholder="Spillernavn..."
+                    placeholder={t.tournamentModal.playerNamePlaceholder}
                     value={newPlayerName}
                     onChange={(e) => setNewPlayerName(e.target.value)}
                     className="flex-1 bg-black border border-gray-700 text-white rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#BFFF00]"
@@ -477,14 +491,14 @@ export default function StartTournamentModal({
                     disabled={isPending || !newPlayerName.trim()}
                     className="bg-[#BFFF00] text-black px-3 py-1.5 rounded-lg text-xs font-bold"
                   >
-                    Legg til
+                    {isEnglish ? 'Add' : 'Legg til'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsAddingNewPlayer(false)}
                     className="px-2 text-gray-400 hover:text-white text-xs"
                   >
-                    Avbryt
+                    {t.common.cancel}
                   </button>
                 </div>
               )}
@@ -509,7 +523,9 @@ export default function StartTournamentModal({
                       <div className="truncate pr-1">
                         <span className="text-xs truncate block">{player.name}</span>
                         {isFixedMember && (
-                          <span className="text-[9px] text-[#BFFF00]/80 block font-normal leading-none mt-0.5">Fast i liga</span>
+                          <span className="text-[9px] text-[#BFFF00]/80 block font-normal leading-none mt-0.5">
+                            {isEnglish ? 'League member' : 'Fast i liga'}
+                          </span>
                         )}
                       </div>
                       {isSelected ? (
@@ -528,12 +544,12 @@ export default function StartTournamentModal({
               <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider block flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#BFFF00]" />
-                  Tidspunkt & Planlegging
+                  {t.tournamentModal.planningDate}
                 </span>
                 <span className="text-[10px] text-gray-400 font-mono">
-                  {scheduleMode === 'today' && 'Starter nå (i dag)'}
-                  {scheduleMode === 'tomorrow' && 'Klargjort for i morgen'}
-                  {scheduleMode === 'custom' && 'Frem i tid'}
+                  {scheduleMode === 'today' && (isEnglish ? 'Starting now (today)' : 'Starter nå (i dag)')}
+                  {scheduleMode === 'tomorrow' && (isEnglish ? 'Scheduled for tomorrow' : 'Klargjort for i morgen')}
+                  {scheduleMode === 'custom' && (isEnglish ? 'Future date' : 'Frem i tid')}
                 </span>
               </label>
 
@@ -549,7 +565,7 @@ export default function StartTournamentModal({
                   }`}
                 >
                   <Zap className="w-3 h-3" />
-                  <span>I dag</span>
+                  <span>{t.tournamentModal.today}</span>
                 </button>
 
                 <button
@@ -562,7 +578,7 @@ export default function StartTournamentModal({
                   }`}
                 >
                   <Calendar className="w-3 h-3" />
-                  <span>I morgen</span>
+                  <span>{t.tournamentModal.tomorrow}</span>
                 </button>
 
                 <button
@@ -575,7 +591,7 @@ export default function StartTournamentModal({
                   }`}
                 >
                   <Calendar className="w-3 h-3" />
-                  <span>Velg dato...</span>
+                  <span>{t.tournamentModal.customDate}</span>
                 </button>
               </div>
 
@@ -587,10 +603,10 @@ export default function StartTournamentModal({
                   </div>
                   <div>
                     <span className="font-extrabold text-[#BFFF00] block capitalize text-xs">
-                      I morgen: {tomorrowFormatted}
+                      {isEnglish ? 'Tomorrow' : 'I morgen'}: {tomorrowFormatted}
                     </span>
                     <span className="text-[11px] text-gray-400">
-                      Turneringen opprettes og dateres til i morgen.
+                      {isEnglish ? 'The tournament will be created and dated for tomorrow.' : 'Turneringen opprettes og dateres til i morgen.'}
                     </span>
                   </div>
                 </div>
@@ -599,7 +615,9 @@ export default function StartTournamentModal({
               {/* Detaljer ved "Egendefinert" */}
               {scheduleMode === 'custom' && (
                 <div className="p-3 bg-gray-900/90 border border-gray-800 rounded-2xl animate-in fade-in space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 block">Velg dato frem i tid</label>
+                  <label className="text-[10px] font-bold text-gray-400 block">
+                    {isEnglish ? 'Select future date' : 'Velg dato frem i tid'}
+                  </label>
                   <input
                     type="date"
                     value={customDate}
@@ -613,7 +631,7 @@ export default function StartTournamentModal({
             {/* Valgfritt turneringsnavn */}
             <div>
               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Turneringsnavn (valgfritt)
+                {isEnglish ? 'Tournament name (optional)' : 'Turneringsnavn (valgfritt)'}
               </label>
               <input
                 type="text"
@@ -621,8 +639,8 @@ export default function StartTournamentModal({
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder={
                   selectedLeague 
-                    ? `${selectedLeague.name} - Runde X (${scheduleMode === 'tomorrow' ? tomorrowDate.toLocaleDateString('no-NB', { day: '2-digit', month: '2-digit' }) : 'i dag'})` 
-                    : (scheduleMode === 'tomorrow' ? `Turnering ${tomorrowDate.toLocaleDateString('no-NB', { day: '2-digit', month: '2-digit' })}` : "f.eks. Fredagsturnering")
+                    ? `${selectedLeague.name} - ${isEnglish ? 'Round' : 'Runde'} X` 
+                    : (isEnglish ? 'e.g. Friday Padel' : 'f.eks. Fredagsturnering')
                 }
                 className="w-full bg-black border border-gray-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#BFFF00]"
               />
@@ -638,14 +656,14 @@ export default function StartTournamentModal({
               {scheduleMode === 'today' ? (
                 <>
                   <Play className="w-4 h-4 fill-current" />
-                  {isPending ? 'Starter...' : 'Start turnering'}
+                  {isPending ? t.tournamentModal.starting : t.tournamentModal.startTournamentBtn}
                 </>
               ) : (
                 <>
                   <Calendar className="w-4 h-4" />
                   {isPending 
-                    ? 'Planlegger...' 
-                    : `Planlegg turnering (${scheduleMode === 'tomorrow' ? 'I morgen' : customDate})`}
+                    ? (isEnglish ? 'Scheduling...' : 'Planlegger...') 
+                    : `${isEnglish ? 'Schedule tournament' : 'Planlegg turnering'} (${scheduleMode === 'tomorrow' ? (isEnglish ? 'Tomorrow' : 'I morgen') : customDate})`}
                 </>
               )}
             </button>
@@ -661,13 +679,15 @@ export default function StartTournamentModal({
           initialPlayerCount={selectedPlayerIds.length >= 4 ? selectedPlayerIds.length : 8}
           initialTargetScore={targetScore}
           initialCourtCount={courtCount}
-          confirmButtonLabel="Overfør til turnering"
+          confirmButtonLabel={isEnglish ? 'Apply setup to tournament' : 'Overfør til turnering'}
           onApplySettings={(settings) => {
             setTargetScore(settings.targetScore);
             setCourtCount(settings.courtCount);
             setIsCalculatorOpen(false);
             setCalculatorNotice(
-              `Overførte innstillinger: ${settings.targetScore} poeng • ${settings.courtCount} ${settings.courtCount === 1 ? 'bane' : 'baner'} (beregnet for ${settings.playerCount} spillere)`
+              isEnglish
+                ? `Transferred settings: ${settings.targetScore} points • ${settings.courtCount} ${settings.courtCount === 1 ? 'court' : 'courts'} (calculated for ${settings.playerCount} players)`
+                : `Overførte innstillinger: ${settings.targetScore} poeng • ${settings.courtCount} ${settings.courtCount === 1 ? 'bane' : 'baner'} (beregnet for ${settings.playerCount} spillere)`
             );
           }}
         />

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Download, Share, PlusSquare, X } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 export default function InstallPwaPrompt() {
+  const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
@@ -78,15 +80,15 @@ export default function InstallPwaPrompt() {
           </div>
           <div className="min-w-0">
             <h4 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-1.5 truncate">
-              Installer Padel-appen
+              {t.pwa.installApp}
               <span className="px-1.5 py-0.2 bg-[#BFFF00]/20 text-[#BFFF00] text-[9px] font-bold rounded shrink-0">
-                App
+                {t.pwa.appBadge}
               </span>
             </h4>
             <p className="text-[11px] sm:text-xs text-gray-300 line-clamp-2">
               {isApple 
-                ? 'Legg til på Hjem-skjerm for fullskjerm-opplevelse på iPhone.' 
-                : 'Få raskere tilgang direkte fra app-skuffen på mobilen.'}
+                ? t.pwa.iosDesc 
+                : t.pwa.androidDesc}
             </p>
           </div>
         </div>
@@ -95,15 +97,15 @@ export default function InstallPwaPrompt() {
           <button
             type="button"
             onClick={handleInstallClick}
-            className="bg-[#BFFF00] hover:bg-[#b0eb00] text-black px-3.5 py-2 rounded-xl text-xs font-extrabold transition active:scale-95 flex items-center gap-1.5 shadow-sm"
+            className="bg-[#BFFF00] hover:bg-[#b0eb00] text-black px-3.5 py-2 rounded-xl text-xs font-extrabold transition active:scale-95 flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            {isApple ? 'Slik gjør du' : 'Installer'}
+            {isApple ? t.pwa.howTo : t.pwa.install}
           </button>
           <button
             type="button"
             onClick={handleDismiss}
-            className="p-2 text-gray-400 hover:text-white rounded-lg transition"
-            aria-label="Lukk"
+            className="p-2 text-gray-400 hover:text-white rounded-lg transition cursor-pointer"
+            aria-label={t.common.close}
           >
             <X className="w-4 h-4" />
           </button>
@@ -116,7 +118,7 @@ export default function InstallPwaPrompt() {
           <div className="bg-[#141414] border border-gray-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative">
             <button
               onClick={() => setShowIOSGuide(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-gray-900 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-gray-900 text-gray-400 hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -125,8 +127,8 @@ export default function InstallPwaPrompt() {
               <div className="w-12 h-12 rounded-2xl bg-[#BFFF00]/15 text-[#BFFF00] border border-[#BFFF00]/30 flex items-center justify-center mx-auto mb-2">
                 <Share className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-extrabold text-white">Installer på iPhone / iPad</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Følg 2 enkle steg i Safari:</p>
+              <h3 className="text-base font-extrabold text-white">{t.pwa.iosTitle}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{t.pwa.iosSubtitle}</p>
             </div>
 
             <div className="space-y-3 bg-gray-900/80 p-4 rounded-2xl border border-gray-800 text-xs">
@@ -135,7 +137,7 @@ export default function InstallPwaPrompt() {
                   1
                 </div>
                 <p className="text-gray-200">
-                  Trykk på <strong className="text-white">Del-ikonet</strong> (<Share className="w-3.5 h-3.5 inline mx-0.5 text-[#BFFF00]" />) i menylinjen nederst i Safari.
+                  {t.pwa.iosStep1} (<Share className="w-3.5 h-3.5 inline mx-0.5 text-[#BFFF00]" />)
                 </p>
               </div>
 
@@ -144,7 +146,7 @@ export default function InstallPwaPrompt() {
                   2
                 </div>
                 <p className="text-gray-200">
-                  Rull ned og velg <strong className="text-white">«Legg til på Hjem-skjerm»</strong> (<PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-[#BFFF00]" />).
+                  {t.pwa.iosStep2} (<PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-[#BFFF00]" />)
                 </p>
               </div>
             </div>
@@ -152,9 +154,9 @@ export default function InstallPwaPrompt() {
             <button
               type="button"
               onClick={() => setShowIOSGuide(false)}
-              className="w-full mt-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl text-xs transition"
+              className="w-full mt-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer"
             >
-              Forstått!
+              {t.pwa.gotIt}
             </button>
           </div>
         </div>

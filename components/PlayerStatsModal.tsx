@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Users, Swords, Hash, Activity } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 type PlayerStatsModalProps = {
   tournament: any;
@@ -9,6 +10,7 @@ type PlayerStatsModalProps = {
 };
 
 export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsModalProps) {
+  const { isEnglish } = useTranslation();
   const participants = tournament?.participants || [];
   const matches = (tournament?.matches || []).filter((m: any) => m.isCompleted);
   const [selectedUserId, setSelectedUserId] = useState<string>(
@@ -98,14 +100,14 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-800/80">
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">Statistikk</span>
-            <h3 className="text-lg sm:text-2xl font-extrabold text-white">Spillerstatistikk</h3>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#BFFF00]">{isEnglish ? 'Statistics' : 'Statistikk'}</span>
+            <h3 className="text-lg sm:text-2xl font-extrabold text-white">{isEnglish ? 'Player Statistics' : 'Spillerstatistikk'}</h3>
           </div>
           <button 
             type="button"
             onClick={onClose} 
             className="text-gray-400 hover:text-white p-2 rounded-xl hover:bg-gray-800 transition"
-            aria-label="Lukk"
+            aria-label={isEnglish ? 'Close' : 'Lukk'}
           >
             <X size={20} />
           </button>
@@ -116,7 +118,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
           {/* Spiller-velger (Pills) */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-              Velg spiller:
+              {isEnglish ? 'Select player:' : 'Velg spiller:'}
             </label>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {participants.map((p: any) => {
@@ -144,11 +146,11 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
               {/* KPI Cards for valgt spiller */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Kamper</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Matches' : 'Kamper'}</span>
                   <span className="text-lg font-black text-white mt-0.5 block">{selectedStats.matchesPlayed}</span>
                 </div>
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">S - U - T</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'W - D - L' : 'S - U - T'}</span>
                   <span className="text-lg font-black text-white mt-0.5 block font-mono">
                     <span className="text-green-400">{selectedStats.won}</span>-
                     <span className="text-amber-400">{selectedStats.drawn}</span>-
@@ -156,7 +158,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                   </span>
                 </div>
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Måldiff</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Goal Diff' : 'Måldiff'}</span>
                   <span className={`text-lg font-black mt-0.5 block font-mono ${
                     selectedStats.pointsScored - selectedStats.pointsConceded > 0 ? 'text-green-400' : selectedStats.pointsScored - selectedStats.pointsConceded < 0 ? 'text-red-400' : 'text-gray-300'
                   }`}>
@@ -165,7 +167,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                   </span>
                 </div>
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Snittscore</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Avg Score' : 'Snittscore'}</span>
                   <span className="text-lg font-black text-white mt-0.5 block font-mono">
                     {selectedStats.matchesPlayed > 0 
                       ? (selectedStats.pointsScored / selectedStats.matchesPlayed).toFixed(1) 
@@ -173,7 +175,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                   </span>
                 </div>
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Turnering-Elo</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Tourn. Elo' : 'Turnering-Elo'}</span>
                   <span className="text-lg font-black text-[#BFFF00] mt-0.5 block font-mono">
                     {Math.round((selectedParticipant.tournamentElo || 1500) * 10) / 10}
                   </span>
@@ -184,7 +186,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                   )}
                 </div>
                 <div className="p-3 bg-black/60 border border-gray-800 rounded-2xl">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Total-Elo</span>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">{isEnglish ? 'Total Elo' : 'Total-Elo'}</span>
                   <span className="text-lg font-black text-gray-200 mt-0.5 block font-mono">
                     {Math.round((selectedParticipant.user?.eloRating || 1500) * 10) / 10}
                   </span>
@@ -196,10 +198,10 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                 <div className="p-3 bg-gray-900/80 border-b border-gray-800 flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-[#BFFF00]" />
-                    <span>Samspill for {selectedParticipant.user?.name}</span>
+                    <span>{isEnglish ? `Synergy for ${selectedParticipant.user?.name}` : `Samspill for ${selectedParticipant.user?.name}`}</span>
                   </h4>
                   <span className="text-[10px] text-gray-400 font-mono">
-                    {matches.length} kamper fullført
+                    {matches.length} {isEnglish ? 'matches completed' : 'kamper fullført'}
                   </span>
                 </div>
 
@@ -219,7 +221,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                               {other.user?.name}
                             </span>
                             <span className="text-[11px] font-mono text-gray-400">
-                              Totalt: <strong className="text-white">{totalEncounters}</strong>
+                              {isEnglish ? 'Total:' : 'Totalt:'} <strong className="text-white">{totalEncounters}</strong>
                             </span>
                           </div>
 
@@ -227,14 +229,14 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                             <div className={`p-2 rounded-lg flex items-center justify-between ${
                               asTeammate > 0 ? 'bg-[#BFFF00]/15 border border-[#BFFF00]/30 text-[#BFFF00]' : 'bg-gray-900 text-gray-500'
                             }`}>
-                              <span className="text-[10px] font-bold uppercase">På lag:</span>
+                              <span className="text-[10px] font-bold uppercase">{isEnglish ? 'Teammate:' : 'På lag:'}</span>
                               <span className="font-mono font-black">{asTeammate}x</span>
                             </div>
 
                             <div className={`p-2 rounded-lg flex items-center justify-between ${
                               asOpponent > 0 ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-300' : 'bg-gray-900 text-gray-500'
                             }`}>
-                              <span className="text-[10px] font-bold uppercase">Motstander:</span>
+                              <span className="text-[10px] font-bold uppercase">{isEnglish ? 'Opponent:' : 'Motstander:'}</span>
                               <span className="font-mono font-black">{asOpponent}x</span>
                             </div>
                           </div>
@@ -248,10 +250,10 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                   <table className="w-full text-left text-xs whitespace-nowrap">
                     <thead className="text-[10px] text-gray-400 uppercase tracking-wider border-b border-gray-800 bg-gray-900/30">
                       <tr>
-                        <th className="px-4 py-3">Medspiller</th>
-                        <th className="px-4 py-3 text-center">Spilt på lag</th>
-                        <th className="px-4 py-3 text-center">Spilt mot</th>
-                        <th className="px-4 py-3 text-right">Totalt møter</th>
+                        <th className="px-4 py-3">{isEnglish ? 'Player' : 'Medspiller'}</th>
+                        <th className="px-4 py-3 text-center">{isEnglish ? 'As teammate' : 'Spilt på lag'}</th>
+                        <th className="px-4 py-3 text-center">{isEnglish ? 'As opponent' : 'Spilt mot'}</th>
+                        <th className="px-4 py-3 text-right">{isEnglish ? 'Total encounters' : 'Totalt møter'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/60">
@@ -263,7 +265,7 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                           const totalEncounters = asTeammate + asOpponent;
 
                           return (
-                            <tr key={other.id} className="hover:bg-gray-850/40">
+                            <tr key={other.id} className="hover:bg-gray-855/40">
                               <td className="px-4 py-3 font-bold text-gray-200">
                                 {other.user?.name}
                               </td>
@@ -271,14 +273,14 @@ export default function PlayerStatsModal({ tournament, onClose }: PlayerStatsMod
                                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                                   asTeammate > 0 ? 'bg-[#BFFF00]/15 text-[#BFFF00]' : 'text-gray-600'
                                 }`}>
-                                  {asTeammate} {asTeammate === 1 ? 'gang' : 'ganger'}
+                                  {asTeammate} {asTeammate === 1 ? (isEnglish ? 'time' : 'gang') : (isEnglish ? 'times' : 'ganger')}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-center font-mono">
                                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                                   asOpponent > 0 ? 'bg-cyan-500/15 text-cyan-300' : 'text-gray-600'
                                 }`}>
-                                  {asOpponent} {asOpponent === 1 ? 'gang' : 'ganger'}
+                                  {asOpponent} {asOpponent === 1 ? (isEnglish ? 'time' : 'gang') : (isEnglish ? 'times' : 'ganger')}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-right font-mono text-gray-300 font-bold">

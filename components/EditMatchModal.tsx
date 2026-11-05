@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { X, Check, Clock, AlertTriangle, Lock, Save, RotateCcw } from 'lucide-react';
 import { updateMatchScore } from '@/app/actions';
 import { isMatchEditable, formatTimeOnly, formatDurationMinutes } from '@/lib/match-utils';
+import { useTranslation } from '@/lib/i18n';
 
 type EditMatchModalProps = {
   match: any;
@@ -12,6 +13,7 @@ type EditMatchModalProps = {
 };
 
 export default function EditMatchModal({ match, targetScore = 24, onClose }: EditMatchModalProps) {
+  const { t, isEnglish } = useTranslation();
   const [scoreA, setScoreA] = useState<number>(match.teamAScore ?? Math.floor(targetScore / 2));
   const [scoreB, setScoreB] = useState<number>(match.teamBScore ?? (targetScore - (match.teamAScore ?? Math.floor(targetScore / 2))));
   const [isCustomMode, setIsCustomMode] = useState<boolean>(
@@ -57,7 +59,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
 
   const handleSave = () => {
     if (!canEdit) {
-      setErrorMessage('Denne kampen er låst for korrektur fordi den ble spilt en tidligere dag.');
+      setErrorMessage(isEnglish ? 'This match is locked for editing because it was played on an earlier day.' : 'Denne kampen er låst for korrektur fordi den ble spilt en tidligere dag.');
       return;
     }
 
@@ -87,7 +89,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
         await updateMatchScore(match.id, scoreA, scoreB, newStartedAt, newCompletedAt);
         onClose();
       } catch (err: any) {
-        setErrorMessage(err.message || 'Feil ved lagring av korrektur');
+        setErrorMessage(err.message || (isEnglish ? 'Failed to save correction' : 'Feil ved lagring av korrektur'));
       }
     });
   };
@@ -99,6 +101,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition"
+          aria-label={isEnglish ? 'Close' : 'Lukk'}
         >
           <X size={16} />
         </button>
@@ -107,19 +110,19 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
         <div className="mb-4">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#BFFF00]/10 border border-[#BFFF00]/30 text-[#BFFF00] text-[10px] font-extrabold rounded-full uppercase tracking-wider">
-              Korriger Kamp
+              {isEnglish ? 'Correct Match' : 'Korriger Kamp'}
             </span>
             {match.courtNumber && (
               <span className="text-[10px] bg-gray-800 text-gray-300 font-bold px-2 py-0.5 rounded-full">
-                Bane {match.courtNumber}
+                {isEnglish ? `Court ${match.courtNumber}` : `Bane ${match.courtNumber}`}
               </span>
             )}
           </div>
           <h2 className="text-lg sm:text-xl font-extrabold text-white mt-1">
-            Endre poengsum og tidspunkt
+            {isEnglish ? 'Edit score and duration' : 'Endre poengsum og tidspunkt'}
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Retter eventuelle feilføringer og oppdaterer tabeller umiddelbart.
+            {isEnglish ? 'Corrects entry mistakes and updates standings immediately.' : 'Retter eventuelle feilføringer og oppdaterer tabeller umiddelbart.'}
           </p>
         </div>
 
@@ -128,7 +131,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
           <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-2xl mb-4 flex items-center gap-2.5 text-xs text-red-300">
             <Lock className="w-4 h-4 shrink-0 text-red-400" />
             <span>
-              <strong>Låst for korrektur:</strong> Kampen ble spilt en tidligere dag og kan ikke endres.
+              <strong>{isEnglish ? 'Locked for editing:' : 'Låst for korrektur:'}</strong> {isEnglish ? 'The match was played on an earlier day and cannot be changed.' : 'Kampen ble spilt en tidligere dag og kan ikke endres.'}
             </span>
           </div>
         )}
@@ -146,7 +149,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
             {/* Team A */}
             <div className={`p-3 rounded-xl border transition ${scoreA > scoreB ? 'bg-[#BFFF00]/10 border-[#BFFF00]/40' : 'bg-gray-900/60 border-gray-800'}`}>
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
-                Lag A {scoreA > scoreB && '👑 Vinner'}
+                {isEnglish ? 'Team A' : 'Lag A'} {scoreA > scoreB && (isEnglish ? '👑 Winner' : '👑 Vinner')}
               </span>
               <p className="text-xs font-bold text-white truncate">{match.teamAPlayer1?.name}</p>
               <p className="text-xs font-bold text-white truncate">{match.teamAPlayer2?.name}</p>
@@ -156,7 +159,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
             {/* Team B */}
             <div className={`p-3 rounded-xl border transition ${scoreB > scoreA ? 'bg-[#BFFF00]/10 border-[#BFFF00]/40' : 'bg-gray-900/60 border-gray-800'}`}>
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
-                Lag B {scoreB > scoreA && '👑 Vinner'}
+                {isEnglish ? 'Team B' : 'Lag B'} {scoreB > scoreA && (isEnglish ? '👑 Winner' : '👑 Vinner')}
               </span>
               <p className="text-xs font-bold text-white truncate">{match.teamBPlayer1?.name}</p>
               <p className="text-xs font-bold text-white truncate">{match.teamBPlayer2?.name}</p>
@@ -166,7 +169,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
 
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800/80">
             <span className="text-xs text-gray-400 font-medium">
-              Målsum: <strong className="text-white">{targetScore}p</strong> ({scoreA + scoreB} valgt)
+              {isEnglish ? 'Target score:' : 'Målsum:'} <strong className="text-white">{targetScore}p</strong> ({scoreA + scoreB} {isEnglish ? 'selected' : 'valgt'})
             </span>
             <button
               type="button"
@@ -177,7 +180,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
                   : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'
               }`}
             >
-              {isCustomMode ? 'Custom score aktiv' : 'Tillat egendefinert sum'}
+              {isCustomMode ? (isEnglish ? 'Custom score active' : 'Custom score aktiv') : (isEnglish ? 'Allow custom sum' : 'Tillat egendefinert sum')}
             </button>
           </div>
         </div>
@@ -188,7 +191,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-bold text-gray-300">
-                Poeng for {match.teamAPlayer1?.name} & {match.teamAPlayer2?.name}:
+                {isEnglish ? 'Points for' : 'Poeng for'} {match.teamAPlayer1?.name} & {match.teamAPlayer2?.name}:
               </label>
               <span className="text-xs font-mono font-extrabold text-[#BFFF00]">{scoreA}</span>
             </div>
@@ -220,7 +223,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
             <div className="animate-in fade-in">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-gray-300">
-                  Poeng for {match.teamBPlayer1?.name} & {match.teamBPlayer2?.name}:
+                  {isEnglish ? 'Points for' : 'Poeng for'} {match.teamBPlayer1?.name} & {match.teamBPlayer2?.name}:
                 </label>
                 <span className="text-xs font-mono font-extrabold text-[#BFFF00]">{scoreB}</span>
               </div>
@@ -251,11 +254,11 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
         {/* Time Correction */}
         <div className="bg-black/40 p-3.5 rounded-2xl border border-gray-800 mb-5">
           <label className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-2">
-            <Clock className="w-3.5 h-3.5 text-[#BFFF00]" /> Juster kamp-tidspunkt (varighet)
+            <Clock className="w-3.5 h-3.5 text-[#BFFF00]" /> {isEnglish ? 'Adjust match timing (duration)' : 'Juster kamp-tidspunkt (varighet)'}
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <span className="text-[10px] text-gray-500 block mb-1">Startet kl:</span>
+              <span className="text-[10px] text-gray-500 block mb-1">{isEnglish ? 'Started at:' : 'Startet kl:'}</span>
               <input
                 type="time"
                 value={startTimeStr}
@@ -265,7 +268,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
               />
             </div>
             <div>
-              <span className="text-[10px] text-gray-500 block mb-1">Fullført kl:</span>
+              <span className="text-[10px] text-gray-500 block mb-1">{isEnglish ? 'Finished at:' : 'Fullført kl:'}</span>
               <input
                 type="time"
                 value={endTimeStr}
@@ -284,7 +287,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
             onClick={onClose}
             className="flex-1 bg-gray-900 hover:bg-gray-800 text-gray-300 py-3 rounded-xl text-xs font-bold transition border border-gray-800"
           >
-            Avbryt
+            {t.common.cancel}
           </button>
           <button
             type="button"
@@ -293,7 +296,7 @@ export default function EditMatchModal({ match, targetScore = 24, onClose }: Edi
             className="flex-[2] bg-[#BFFF00] hover:bg-[#b0eb00] text-black py-3 rounded-xl text-xs font-extrabold transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none shadow-[0_0_15px_rgba(191,255,0,0.25)] flex items-center justify-center gap-1.5"
           >
             <Save className="w-4 h-4" />
-            {isPending ? 'LAGRER...' : 'LAGRE KORRIGERING'}
+            {isPending ? (isEnglish ? 'SAVING...' : 'LAGRER...') : (isEnglish ? 'SAVE CORRECTION' : 'LAGRE KORRIGERING')}
           </button>
         </div>
       </div>
