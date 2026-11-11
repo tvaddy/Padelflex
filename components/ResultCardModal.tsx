@@ -26,11 +26,11 @@ type ResultCardModalProps = {
 };
 
 // Pure helper function for filename generation
-function getResultCardFileName(type: 'match' | 'tournament' | 'league'): string {
+function getResultCardFileName(type: 'match' | 'tournament' | 'league', isEnglish?: boolean): string {
   const stamp = Math.floor(Math.random() * 100000);
-  if (type === 'match') return `padelflex-kamp-${stamp}.png`;
-  if (type === 'league') return `padelflex-ligatabell-${stamp}.png`;
-  return `padelflex-turnering-${stamp}.png`;
+  if (type === 'match') return isEnglish ? `padelflex-match-${stamp}.png` : `padelflex-kamp-${stamp}.png`;
+  if (type === 'league') return isEnglish ? `padelflex-league-${stamp}.png` : `padelflex-ligatabell-${stamp}.png`;
+  return isEnglish ? `padelflex-tournament-${stamp}.png` : `padelflex-turnering-${stamp}.png`;
 }
 
 export default function ResultCardModal({ type, data, onClose }: ResultCardModalProps) {
@@ -137,11 +137,11 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
     });
   }, [data, type]);
 
-  // Lag A / Lag B navn hjelpere
-  const teamAPlayer1Name = typeof data?.teamAPlayer1 === 'object' ? data?.teamAPlayer1?.name : data?.teamAPlayer1 || 'Spiller 1';
-  const teamAPlayer2Name = typeof data?.teamAPlayer2 === 'object' ? data?.teamAPlayer2?.name : data?.teamAPlayer2 || 'Spiller 2';
-  const teamBPlayer1Name = typeof data?.teamBPlayer1 === 'object' ? data?.teamBPlayer1?.name : data?.teamBPlayer1 || 'Spiller 1';
-  const teamBPlayer2Name = typeof data?.teamBPlayer2 === 'object' ? data?.teamBPlayer2?.name : data?.teamBPlayer2 || 'Spiller 2';
+  // Team A / Team B player name helpers with bilingual fallback
+  const teamAPlayer1Name = typeof data?.teamAPlayer1 === 'object' ? data?.teamAPlayer1?.name : data?.teamAPlayer1 || (isEnglish ? 'Player 1' : 'Spiller 1');
+  const teamAPlayer2Name = typeof data?.teamAPlayer2 === 'object' ? data?.teamAPlayer2?.name : data?.teamAPlayer2 || (isEnglish ? 'Player 2' : 'Spiller 2');
+  const teamBPlayer1Name = typeof data?.teamBPlayer1 === 'object' ? data?.teamBPlayer1?.name : data?.teamBPlayer1 || (isEnglish ? 'Player 1' : 'Spiller 1');
+  const teamBPlayer2Name = typeof data?.teamBPlayer2 === 'object' ? data?.teamBPlayer2?.name : data?.teamBPlayer2 || (isEnglish ? 'Player 2' : 'Spiller 2');
 
   const teamAWonStandalone = data?.winnerTeam === 'A';
   const teamBWonStandalone = data?.winnerTeam === 'B';
@@ -217,7 +217,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
     ctx.fillStyle = '#888888';
     ctx.font = '20px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(new Date().toLocaleDateString('no-NB', { day: '2-digit', month: 'short', year: 'numeric' }), 750, 85);
+    ctx.fillText(new Date().toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', { day: '2-digit', month: 'short', year: 'numeric' }), 750, 85);
     ctx.textAlign = 'left';
 
     // Divider
@@ -526,7 +526,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
           setCopiedType('text');
           setTimeout(() => setCopiedType(null), 3000);
         } catch {
-          setShareError('Kunne ikke kopiere til utklippstavle.');
+          setShareError(isEnglish ? 'Could not copy to clipboard.' : 'Kunne ikke kopiere til utklippstavle.');
         }
       }
     } finally {
@@ -617,7 +617,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
 
               <div className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-gray-500" />
-                {new Date().toLocaleDateString('no-NB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                {new Date().toLocaleDateString(isEnglish ? 'en-US' : 'no-NB', { day: '2-digit', month: 'short', year: 'numeric' })}
               </div>
             </div>
 
@@ -626,7 +626,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
               <div className="space-y-4">
                 <div className="text-center space-y-1">
                   <span className="px-2.5 py-0.5 bg-gray-900 border border-gray-800 text-gray-300 font-mono text-[10px] font-bold rounded-full uppercase tracking-wider">
-                    {data?.format === 'BEST_OF_3' ? 'Best av 3 sett' : data?.format === 'BEST_OF_3_SUPER_TB' ? 'Super-Tiebreak' : 'Ordinær Kamp'}
+                    {data?.format === 'BEST_OF_3' ? (isEnglish ? 'Best of 3 sets' : 'Best av 3 sett') : data?.format === 'BEST_OF_3_SUPER_TB' ? 'Super-Tiebreak' : (isEnglish ? 'Regular Match' : 'Ordinær Kamp')}
                   </span>
                   <h4 className="text-sm font-extrabold text-white truncate mt-1">
                     {data.name || (isEnglish ? 'Padel Match' : 'Padelkamp')}
@@ -824,14 +824,14 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                   <div className="flex items-center justify-center gap-1.5 text-[#BFFF00]">
                     <Trophy className="w-5 h-5 fill-current" />
                     <span className="font-extrabold text-xs uppercase tracking-widest">
-                      Ligarating & Tabell
+                      {isEnglish ? 'League Rating & Standings' : 'Ligarating & Tabell'}
                     </span>
                   </div>
                   <h4 className="text-sm font-extrabold text-white truncate">
-                    {data?.name || 'Liga'}
+                    {data?.name || (isEnglish ? 'League' : 'Liga')}
                   </h4>
                   <p className="text-[10px] text-gray-400 font-mono">
-                    {data?.participants?.length || 0} spillere
+                    {data?.participants?.length || 0} {isEnglish ? 'players' : 'spillere'}
                   </p>
                 </div>
 
@@ -874,16 +874,16 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                           </span>
 
                           <span className={`text-xs truncate ${isLeader ? 'font-black text-white' : 'font-bold text-gray-200'}`}>
-                            {p.user?.name || 'Spiller'}
+                            {p.user?.name || (isEnglish ? 'Player' : 'Spiller')}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0 font-mono text-[10px] sm:text-xs text-right">
                           <span className="text-cyan-300 font-bold hidden sm:inline-block">
-                            {scorePct}% <span className="text-[9px] text-gray-500 font-normal">score</span>
+                            {scorePct}% <span className="text-[9px] text-gray-500 font-normal">{isEnglish ? 'score' : 'score'}</span>
                           </span>
                           <span className="text-gray-300 font-bold">
-                            {winPct}% <span className="text-[9px] text-gray-500 font-normal">seier</span>
+                            {winPct}% <span className="text-[9px] text-gray-500 font-normal">{isEnglish ? 'win' : 'seier'}</span>
                           </span>
                           <span className="font-extrabold text-[#BFFF00] text-sm min-w-[50px] text-right">
                             {rating} <span className="text-[9px] sm:text-[10px] text-gray-400 font-normal block sm:inline">Rating</span>
@@ -903,14 +903,14 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                   <div className="flex items-center justify-center gap-1.5 text-[#BFFF00]">
                     <Trophy className="w-5 h-5 fill-current" />
                     <span className="font-extrabold text-xs uppercase tracking-widest">
-                      Turneringsresultat
+                      {isEnglish ? 'Tournament Results' : 'Turneringsresultat'}
                     </span>
                   </div>
                   <h4 className="text-base font-black text-white truncate">
-                    {data?.name || 'Turnering'}
+                    {data?.name || (isEnglish ? 'Tournament' : 'Turnering')}
                   </h4>
                   <p className="text-[10px] text-gray-400 font-mono">
-                    {sortedTournamentParticipants.length} spillere • {data?.matches?.filter((m: any) => m.isCompleted)?.length || 0} kamper fullført
+                    {sortedTournamentParticipants.length} {isEnglish ? 'players' : 'spillere'} • {data?.matches?.filter((m: any) => m.isCompleted)?.length || 0} {isEnglish ? 'matches completed' : 'kamper fullført'}
                   </p>
                 </div>
 
@@ -945,21 +945,21 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                           </span>
 
                           <span className={`text-xs truncate ${isWinner ? 'font-black text-white' : 'font-bold text-gray-200'}`}>
-                            {p.user?.name || 'Spiller'}
+                            {p.user?.name || (isEnglish ? 'Player' : 'Spiller')}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0 font-mono text-xs">
                           <span className="text-gray-400 text-[10px]">
-                            <strong className="text-green-400">{p.matchesWon || 0}</strong>V -{' '}
-                            <strong className="text-amber-400">{p.matchesDrawn || 0}</strong>U -{' '}
-                            <strong className="text-red-400">{p.matchesLost || 0}</strong>T
+                            <strong className="text-green-400">{p.matchesWon || 0}</strong>{isEnglish ? 'W' : 'V'} -{' '}
+                            <strong className="text-amber-400">{p.matchesDrawn || 0}</strong>{isEnglish ? 'D' : 'U'} -{' '}
+                            <strong className="text-red-400">{p.matchesLost || 0}</strong>{isEnglish ? 'L' : 'T'}
                           </span>
                           <div className="text-right min-w-[48px]">
                             <span className="font-black text-[#BFFF00] text-base">
                               {p.totalPoints || 0}
                             </span>
-                            <span className="text-[10px] text-gray-500 font-normal ml-0.5">p</span>
+                            <span className="text-[10px] text-gray-500 font-normal ml-0.5">{isEnglish ? 'pts' : 'p'}</span>
                           </div>
                         </div>
                       </div>
@@ -1044,7 +1044,7 @@ export default function ResultCardModal({ type, data, onClose }: ResultCardModal
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={previewImageUrl} 
-                  alt="Resultatkort forhåndsvisning" 
+                  alt={isEnglish ? "Result card preview" : "Resultatkort forhåndsvisning"} 
                   className="w-full max-w-[320px] mx-auto rounded-xl border border-[#BFFF00]/30 shadow-lg"
                 />
               </div>

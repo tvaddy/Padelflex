@@ -6,7 +6,23 @@ PadelFlex was engineered specifically for padel clubs, friend groups, and corpor
 
 The main goal of the project was to easily allow for an uneven amount of players (e.g. 5-7), for players to join or leave mid-tournament, and then fairly match playtime for players dynamically.
 
-Disclaimer: This app was developed in its entirety by Google AI Studio. It was developed as a personal hobby project, and is provided here as a proof-of-concept.
+> **Disclaimer**: This app was developed in its entirety by Google AI Studio. It was developed as a personal hobby project, and is provided here as a proof-of-concept.
+
+---
+
+## Screenshots & UI Showcase
+
+### Mobile Experience (Optimized for Tournament Play on Court)
+
+| Live Americano Tournament & Courts | League Leaderboard & 2v2 Elo |
+| :---: | :---: |
+| ![Live Americano Tournament](public/screenshots/tournament-live.png) | ![League Standings](public/screenshots/leagues-standings.png) |
+| *Multi-court parallel allocation (1–3 courts), live scoreboard, and round timer* | *Normalized standings, Elo progression, goal diff, and tie-breakers* |
+
+### Desktop & Tablet Overview
+
+![Desktop Tournament Overview](public/screenshots/desktop-tournament.png)
+*Full-width desktop overview showing multi-court queue management, real-time standings table, and match status.*
 
 ---
 
@@ -36,8 +52,6 @@ Disclaimer: This app was developed in its entirety by Google AI Studio. It was d
 ## 1. Overview & Tech Stack
 
 PadelFlex was engineered specifically for padel clubs, friend groups, and corporate leagues. It eliminates manual paper notes and rigid spreadsheets, handling rotations, multi-court queues, and 2v2 Elo ratings in real time.
-
-The main goal of the project was to easily allow for an uneven amount of players (e.g. 5-7), for players to join or leave mid-tournament, and then fairly match playtime for players dynamically.
 
 - **Framework**: Next.js 15.5+ (App Router, Server Actions, Route Handlers)
 - **Frontend**: React 19, TypeScript, Tailwind CSS v4, Motion (fluid animations), Lucide React icons

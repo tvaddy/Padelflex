@@ -1,6 +1,6 @@
 {
-  "summary": "Plan for dynamic server-side runtime injection of environment variables (NEXT_PUBLIC_APP_LANGUAGE and NEXT_PUBLIC_ENABLE_TEST_PROFILE) so changing them in docker-compose.yml works immediately without rebuilding the image, plus an interactive in-app language switcher.",
-  "updatedAt": "2026-11-05T21:31:05.844764152Z",
-  "requestFeedback": true,
-  "userFacing": true
+  "summary":  "Plan to redesign the top header navbar to be clean, responsive, and prevent overlap on mobile devices while retaining the NO/EN language switcher.\n- Shrink touch targets cleanly with icon-only or shortened labels on mobile screens (<640px)\n- Hide duplicate/redundant buttons on mobile (e.g. separate profile switch button, since clicking the profile badge already opens the profile modal)\n- Make \"Ny turnering\" compact on mobile (icon with optional short text on larger viewports)\n- Give PadelFlex logo and title explicit min-w-0 and prevent shrinking so it is never compressed or overlapped",
+  "updatedAt":  "2026-11-10T23:11:40.804029898Z",
+  "requestFeedback":  true,
+  "userFacing":  true
 }

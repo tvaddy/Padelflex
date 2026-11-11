@@ -93,65 +93,63 @@ export default function DashboardClient({
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col selection:bg-[#BFFF00] selection:text-black overflow-x-hidden">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-gray-800/80 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <PadelLogo size="sm" showText={false} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="font-extrabold tracking-tight text-base sm:text-lg text-white">
-                PADEL<span className="text-[#BFFF00]">FLEX</span>
-              </span>
-              
-              {/* Profile Pill Badge */}
-              <button
-                type="button"
-                onClick={() => setIsSwitchProfileModalOpen(true)}
-                className="hidden xs:inline-flex items-center gap-1 px-2 py-0.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-gray-300 hover:text-white text-[10px] sm:text-[11px] font-mono rounded-full transition truncate"
-                title={t.common.switchProfile}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#BFFF00] shrink-0" />
-                <span className="truncate max-w-[90px] sm:max-w-[120px] font-bold">
-                  {isAdmin ? 'ADMIN (All)' : accessCode}
-                </span>
-                <RefreshCw className="w-2.5 h-2.5 text-gray-500 ml-0.5 shrink-0" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Global Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Language Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleLocale}
-            className="px-2.5 py-1.5 sm:py-2 bg-gray-900/90 hover:bg-gray-800 border border-gray-800 rounded-xl sm:rounded-2xl transition flex items-center gap-1 text-[11px] sm:text-xs font-mono font-bold shrink-0 cursor-pointer"
-            title="Switch language / Bytt språk"
-          >
-            <span className={locale === 'no' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>NO</span>
-            <span className="text-gray-600">/</span>
-            <span className={locale === 'en' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>EN</span>
-          </button>
-
-          {/* Switch Profile Button */}
+      <header className="sticky top-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-gray-800/80 px-2.5 sm:px-6 py-2 sm:py-3 flex items-center justify-between gap-1.5 sm:gap-3">
+        {/* Left Branding & Profile */}
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 shrink-0">
+          <PadelLogo size="sm" showText={false} className="shrink-0" />
+          <span className="font-black tracking-tight text-sm xs:text-base sm:text-lg text-white shrink-0">
+            PADEL<span className="text-[#BFFF00]">FLEX</span>
+          </span>
+          
+          {/* Profile Pill Badge (Clickable to switch profile) */}
           <button
             type="button"
             onClick={() => setIsSwitchProfileModalOpen(true)}
-            className="p-2 sm:py-2 sm:px-3 bg-gray-900/90 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 rounded-xl sm:rounded-2xl transition flex items-center gap-1.5 text-xs font-bold shrink-0"
+            className="inline-flex items-center gap-1 px-1.5 xs:px-2 py-0.5 bg-gray-900/90 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-gray-300 hover:text-white text-[9px] xs:text-[10px] sm:text-[11px] font-mono rounded-full transition max-w-[85px] xs:max-w-[110px] sm:max-w-[130px] shrink-0 cursor-pointer"
+            title={t.common.switchProfile}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#BFFF00] shrink-0" />
+            <span className="truncate font-bold">
+              {isAdmin ? 'ADMIN' : accessCode}
+            </span>
+            <RefreshCw className="w-2.5 h-2.5 text-gray-500 shrink-0 hidden xs:inline" />
+          </button>
+        </div>
+
+        {/* Global Action Buttons */}
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
+          {/* Language Toggle Button - Sleek & Compact */}
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="px-2 py-1 sm:px-2.5 sm:py-1.5 bg-gray-900/90 hover:bg-gray-800 border border-gray-800 rounded-lg sm:rounded-xl transition flex items-center gap-0.5 text-[10px] sm:text-xs font-mono font-bold shrink-0 cursor-pointer"
+            title="Switch language / Bytt språk"
+          >
+            <span className={locale === 'no' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>NO</span>
+            <span className="text-gray-600 text-[9px]">/</span>
+            <span className={locale === 'en' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>EN</span>
+          </button>
+
+          {/* Switch Profile Button (Desktop only, since profile badge on left already triggers it) */}
+          <button
+            type="button"
+            onClick={() => setIsSwitchProfileModalOpen(true)}
+            className="hidden md:flex py-1.5 px-2.5 bg-gray-900/90 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 rounded-xl transition items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer"
             title={t.common.switchProfile}
           >
             <RefreshCw className="w-3.5 h-3.5 text-[#BFFF00]" />
-            <span className="hidden sm:inline">{t.common.switchProfile}</span>
+            <span>{t.common.switchProfile}</span>
           </button>
 
-          {/* New Tournament */}
+          {/* New Tournament - Compact icon on mobile, icon + text on sm+ */}
           <button
             type="button"
             onClick={handleStartGeneralTournament}
-            className="bg-[#BFFF00] text-black px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl font-extrabold text-xs sm:text-sm flex items-center gap-1.5 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_20px_rgba(191,255,0,0.3)] shrink-0 cursor-pointer"
+            className="bg-[#BFFF00] text-black p-1.5 xs:px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-black text-xs sm:text-sm flex items-center gap-1.5 hover:bg-[#b0eb00] transition active:scale-95 shadow-[0_0_15px_rgba(191,255,0,0.3)] shrink-0 cursor-pointer"
+            title={t.tournaments.newTournament}
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>{t.tournaments.newTournament}</span>
+            <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+            <span className="hidden sm:inline font-extrabold">{t.tournaments.newTournament}</span>
           </button>
 
           {/* Logout */}
@@ -159,7 +157,7 @@ export default function DashboardClient({
             type="button"
             onClick={logout}
             title={t.common.logout}
-            className="p-2 sm:py-2 sm:px-2.5 bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-xl sm:rounded-2xl transition flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer"
+            className="p-1.5 sm:p-2 bg-gray-900/80 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-lg sm:rounded-xl transition flex items-center text-xs font-bold shrink-0 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -412,7 +410,7 @@ function SwitchProfileModal({
     }
   };
 
-  const { t } = useTranslation();
+  const { t, locale, toggleLocale } = useTranslation();
 
   return (
     <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overflow-y-auto">
@@ -517,13 +515,29 @@ function SwitchProfileModal({
           </div>
         )}
 
+        {/* Language setting convenience inside profile modal */}
+        <div className="pt-3 border-t border-gray-800/80 flex items-center justify-between">
+          <span className="text-[11px] font-bold text-gray-400">
+            {locale === 'en' ? 'App language' : 'Språk i appen'}
+          </span>
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="px-2.5 py-1 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 cursor-pointer"
+          >
+            <span className={locale === 'no' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>NO</span>
+            <span className="text-gray-600">/</span>
+            <span className={locale === 'en' ? 'text-[#BFFF00] font-black' : 'text-gray-500'}>EN</span>
+          </button>
+        </div>
+
         <div className="pt-2 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-gray-400 hover:text-white font-bold"
+            className="text-xs text-gray-400 hover:text-white font-bold cursor-pointer px-3 py-1.5 rounded-lg hover:bg-gray-800 transition"
           >
-            Lukk
+            {t.common.close}
           </button>
         </div>
       </div>
